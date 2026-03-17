@@ -1,0 +1,13 @@
+{
+  "domain": "keba_one_ev",
+  "name": "SolarEdge One EV Charger",
+  "codeowners": ["@jonatanmauser"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/jonatanmauser/keba_one_ev",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["custom_components.keba_one_ev"],
+  "requirements": [],
+  "version": "1.1.0"
+}

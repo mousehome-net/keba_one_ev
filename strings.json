@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "SolarEdge One EV Charger einrichten",
+        "description": "Verbindung zum KEBA EV Charger konfigurieren.",
+        "data": {
+          "host": "IP-Adresse",
+          "port": "UDP Port",
+          "scan_interval": "Abfrageintervall (Sekunden)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung fehlgeschlagen. Bitte IP-Adresse und Port prüfen."
+    },
+    "abort": {
+      "already_configured": "Gerät ist bereits konfiguriert."
+    }
+  }
+}
