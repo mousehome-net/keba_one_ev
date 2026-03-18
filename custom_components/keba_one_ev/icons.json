@@ -1,3 +1,27 @@
 {
-  "integration_icon": "mdi:ev-station"
+  "entity": {
+    "sensor": {
+      "charging_state": {"default": "mdi:ev-station"},
+      "power": {"default": "mdi:lightning-bolt"},
+      "energy_session": {"default": "mdi:battery-charging"},
+      "energy_total": {"default": "mdi:counter"},
+      "current_l1": {"default": "mdi:current-ac"},
+      "current_l2": {"default": "mdi:current-ac"},
+      "current_l3": {"default": "mdi:current-ac"},
+      "current_limit_user": {"default": "mdi:current-ac"}
+    },
+    "switch": {
+      "charging_enabled": {"default": "mdi:ev-plug-type2"}
+    },
+    "number": {
+      "charging_current": {"default": "mdi:current-ac"},
+      "set_energy": {"default": "mdi:lightning-bolt"}
+    },
+    "select": {
+      "phase_mode": {"default": "mdi:lightning-bolt-circle"}
+    },
+    "button": {
+      "unlock": {"default": "mdi:lock-open-variant"}
+    }
+  }
 }
