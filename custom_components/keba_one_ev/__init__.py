@@ -25,7 +25,7 @@ from .coordinator import KebaCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 # All platforms provided by this integration
-PLATFORMS = ["sensor", "switch", "number", "select", "button"]
+PLATFORMS = ["binary_sensor", "sensor", "switch", "number", "select", "button"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

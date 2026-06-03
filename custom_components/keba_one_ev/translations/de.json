@@ -58,6 +58,10 @@
       "error1": { "name": "Fehlercode 1" },
       "error2": { "name": "Fehlercode 2" }
     },
+    "binary_sensor": {
+      "vehicle_connected": { "name": "Fahrzeug angeschlossen" },
+      "charging": { "name": "Lädt" }
+    },
     "switch": {
       "charging_enabled": { "name": "Laden freigegeben" }
     },
