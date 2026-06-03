@@ -9,23 +9,25 @@ Communicates directly via the **KEBA UDP protocol** on the local network — no 
 
 | Platform | Entity | Default |
 |----------|--------|---------|
-| Sensor | Ladestatus (charging state) | ✅ enabled |
-| Sensor | Ladeleistung (charging power, W) | ✅ enabled |
-| Sensor | Session-Energie (Wh) | ✅ enabled |
-| Sensor | Gesamtenergie (total kWh) | ✅ enabled |
-| Sensor | Strom L1 / L2 / L3 (A) | ✅ enabled |
-| Sensor | Strom-Limit User (A) | ✅ enabled |
-| Sensor | Spannung L1 / L2 / L3 (V) | ☑ disabled |
-| Sensor | Leistungsfaktor (%) | ☑ disabled |
-| Sensor | Strom-Limit Hardware / Failsafe (A) | ☑ disabled |
-| Sensor | Stecker Status | ☑ disabled |
-| Sensor | Session-Dauer (s) | ☑ disabled |
+| Binary Sensor | Vehicle Connected (`binary_sensor.*_vehicle_connected`) | ✅ enabled |
+| Binary Sensor | Charging (`binary_sensor.*_charging`) | ✅ enabled |
+| Sensor | Charging State | ✅ enabled |
+| Sensor | Charging Power (W) | ✅ enabled |
+| Sensor | Session Energy (Wh) | ✅ enabled |
+| Sensor | Total Energy (kWh) | ✅ enabled |
+| Sensor | Current L1 / L2 / L3 (A) | ✅ enabled |
+| Sensor | Current Limit User (A) | ✅ enabled |
+| Sensor | Voltage L1 / L2 / L3 (V) | ☑ disabled |
+| Sensor | Power Factor (%) | ☑ disabled |
+| Sensor | Current Limit Hardware / Failsafe (A) | ☑ disabled |
+| Sensor | Plug Status | ☑ disabled |
+| Sensor | Session Duration (s) | ☑ disabled |
 | Sensor | RFID Tag | ☑ disabled |
 | Sensor | Firmware | ☑ disabled |
-| Sensor | Fehlercode 1 / 2 | ☑ disabled |
-| Switch | Laden freigegeben (enable/disable charging) | ✅ enabled |
-| Number | Ladestrom (6–16 A slider) | ✅ enabled |
-| Select | Phasenmodus (1-phase / 3-phase) | ✅ enabled |
+| Sensor | Error Code 1 / 2 | ☑ disabled |
+| Switch | Charging Enabled | ✅ enabled |
+| Number | Charging Current (6–16 A slider) | ✅ enabled |
+| Select | Phase Mode (1-phase / 3-phase) | ✅ enabled |
 
 Disabled entities can be enabled individually under
 **Settings → Devices & Services → SolarEdge One EV Charger → device → (entity list)**.
@@ -125,6 +127,30 @@ Response:   JSON object
 | SolarEdge ONE EV Charger (KEBA P30 OEM), S/N 99206288 | 04.00.44 | ✅ Working |
 
 Other KEBA P30 variants that speak the same UDP protocol should work too, but have not been tested.
+
+---
+
+## keba-charger-card
+
+The [keba-charger-card](https://github.com/pail23/keba-charger-card) Lovelace card works with this integration.
+Use the `vehicle_connected` binary sensor as the main entity and map the stats manually:
+
+```yaml
+type: custom:keba-charger-card
+entity: binary_sensor.<device>_vehicle_connected
+stats:
+  - entity_id: sensor.<device>_power
+    unit: W
+    subtitle: Charging Power
+  - entity_id: sensor.<device>_energy_session
+    unit: Wh
+    subtitle: Session Energy
+  - entity_id: sensor.<device>_current_l1
+    unit: A
+    subtitle: Current L1
+```
+
+Replace `<device>` with your actual device name (visible in **Settings → Devices & Services**).
 
 ---
 
