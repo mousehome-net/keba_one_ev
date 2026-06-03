@@ -34,7 +34,7 @@ class KebaUnlockButton(CoordinatorEntity[KebaCoordinator], ButtonEntity):
     """Button that unlocks the EV charging cable."""
 
     _attr_has_entity_name = True
-    _attr_name = "Kabel entsperren"
+    _attr_translation_key = "unlock_cable"
     _attr_icon = "mdi:lock-open-variant"
 
     def __init__(self, coordinator: KebaCoordinator, entry: ConfigEntry) -> None:

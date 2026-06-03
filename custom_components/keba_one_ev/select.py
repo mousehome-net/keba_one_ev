@@ -27,18 +27,18 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import KebaCoordinator
 
-# Options shown in the HA UI dropdown
-PHASE_OPTIONS = ["1-phasig", "3-phasig"]
+# Machine-readable option keys — labels come from translations/*.json
+PHASE_OPTIONS = ["1_phase", "3_phase"]
 
-# Map UI label → KEBA command
+# Map option key → KEBA command
 PHASE_TO_CMD = {
-    "1-phasig": "xswitchphase 1",
-    "3-phasig": "xswitchphase 3",
+    "1_phase": "xswitchphase 1",
+    "3_phase": "xswitchphase 3",
 }
 
-# Map raw integer from report 2 → UI label
+# Map raw integer from report 2 → option key
 # Value 2 (2-phase) is reported by some hardware variants; treat as 1-phase
-PHASE_FROM_INT = {1: "1-phasig", 2: "1-phasig", 3: "3-phasig"}
+PHASE_FROM_INT = {1: "1_phase", 2: "1_phase", 3: "3_phase"}
 
 
 async def async_setup_entry(
@@ -55,7 +55,7 @@ class KebaPhaseSelect(CoordinatorEntity[KebaCoordinator], SelectEntity):
     """Dropdown to choose between 1-phase and 3-phase charging."""
 
     _attr_has_entity_name = True
-    _attr_name = "Phasenmodus"
+    _attr_translation_key = "phase_mode"
     _attr_icon = "mdi:lightning-bolt-circle"
     _attr_options = PHASE_OPTIONS
 
@@ -68,12 +68,12 @@ class KebaPhaseSelect(CoordinatorEntity[KebaCoordinator], SelectEntity):
 
     @property
     def current_option(self) -> str | None:
-        """Return the currently active phase mode as a UI label."""
+        """Return the currently active phase mode as an option key."""
         data = self.coordinator.data
         if data is None:
             return None
         # Default to 3-phase if the value is missing or unexpected
-        return PHASE_FROM_INT.get(data.get("phase_switch", 3), "3-phasig")
+        return PHASE_FROM_INT.get(data.get("phase_switch", 3), "3_phase")
 
     async def async_select_option(self, option: str) -> None:
         """Send the xswitchphase command and refresh coordinator data."""

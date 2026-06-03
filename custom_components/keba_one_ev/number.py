@@ -1,8 +1,8 @@
 """Number platform for the SE One EV Charger integration.
 
 Provides two slider entities:
-  - Ladestrom: charging current 6–16 A  (command: curr <mA>)
-  - Ladeenergie-Ziel: session energy limit 0–100 kWh (command: setenergy <0.1Wh>)
+  - charging_current:      charging current 6–16 A  (command: curr <mA>)
+  - charging_energy_target: session energy limit 0–100 kWh (command: setenergy <0.1Wh>)
     Setting 0 disables the energy limit (charge without limit).
 """
 from __future__ import annotations
@@ -35,7 +35,7 @@ class KebaCurrentNumber(CoordinatorEntity[KebaCoordinator], NumberEntity):
     """Slider to set the EV charging current (6–16 A)."""
 
     _attr_has_entity_name = True
-    _attr_name = "Ladestrom"
+    _attr_translation_key = "charging_current"
     _attr_icon = "mdi:current-ac"
     _attr_native_min_value = KEBA_MIN_CURRENT_MA / 1000   # 6 A
     _attr_native_max_value = KEBA_MAX_CURRENT_MA / 1000   # 16 A
@@ -77,9 +77,9 @@ class KebaSetEnergyNumber(CoordinatorEntity[KebaCoordinator], NumberEntity):
     """
 
     _attr_has_entity_name = True
-    _attr_name = "Ladeenergie-Ziel"
+    _attr_translation_key = "charging_energy_target"
     _attr_icon = "mdi:lightning-bolt"
-    _attr_native_min_value = 0.0    # 0 = kein Limit
+    _attr_native_min_value = 0.0    # 0 = no limit
     _attr_native_max_value = 100.0  # 100 kWh
     _attr_native_step = 0.1
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR

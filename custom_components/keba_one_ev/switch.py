@@ -37,7 +37,7 @@ class KebaChargingSwitch(CoordinatorEntity[KebaCoordinator], SwitchEntity):
     """Switch that enables or disables EV charging."""
 
     _attr_has_entity_name = True
-    _attr_name = "Laden freigegeben"
+    _attr_translation_key = "charging_enabled"
     _attr_icon = "mdi:ev-plug-type2"
 
     def __init__(self, coordinator: KebaCoordinator, entry: ConfigEntry) -> None:

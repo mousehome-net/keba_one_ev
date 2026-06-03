@@ -1,26 +1,27 @@
 """Sensor platform for the SE One EV Charger integration.
 
-Creates 18 sensor entities from the data provided by KebaCoordinator.
+Creates 21 sensor entities from the data provided by KebaCoordinator.
 Sensors are split into two groups:
 
   Enabled by default (visible without extra steps):
-    - Ladestatus        charging state text (Kein Fahrzeug / Lädt / …)
-    - Ladeleistung      active charging power in W
-    - Session-Energie   energy charged in the current session (Wh)
-    - Gesamtenergie     total lifetime energy (kWh)
-    - Strom L1/L2/L3    per-phase current in A
-    - Strom-Limit (User) user-set current limit in A
+    - charging_state    charging state (translated via strings.json)
+    - power             active charging power in W
+    - energy_session    energy charged in the current session (Wh)
+    - energy_total      total lifetime energy (kWh)
+    - current_l1/l2/l3  per-phase current in A
+    - current_limit_user user-set current limit in A
 
   Disabled by default (can be enabled in HA entity registry):
-    - Spannung L1/L2/L3         per-phase voltage in V
-    - Leistungsfaktor            power factor in %
-    - Strom-Limit (Hardware)     fixed hardware maximum in A
-    - Strom-Limit (Failsafe)     current when backend connection is lost
-    - Stecker Status             plug connected / disconnected
-    - Session-Dauer              session duration in seconds
-    - RFID Tag                   RFID card ID used to authorise the session
-    - Firmware                   charger firmware version
-    - Fehlercode 1 / 2           error codes (0 = no error)
+    - voltage_l1/l2/l3          per-phase voltage in V
+    - power_factor               power factor in %
+    - current_limit_hw           fixed hardware maximum in A
+    - current_limit_failsafe     current when backend connection is lost
+    - current_limit_pct          user limit as percentage
+    - plug                       plug connected / disconnected (translated)
+    - session_duration           session duration in seconds
+    - rfid_tag                   RFID card ID used to authorise the session
+    - firmware                   charger firmware version
+    - error1 / error2            error codes (0 = no error)
 
 All sensors share the same KebaCoordinator instance, so no additional
 UDP connections are opened.
@@ -78,6 +79,9 @@ class KebaSensorDescription(SensorEntityDescription):
 #   power     : raw mW  → W   (÷ 1000)
 #   energy    : raw 0.1Wh → Wh (× 0.1) or kWh (× 0.0001)
 #   PF        : raw 0–1000 → % (÷ 10)
+#
+# Entity names come from translations (strings.json / translations/*.json)
+# via translation_key — no hardcoded name= strings here.
 # ---------------------------------------------------------------------------
 SENSORS: tuple[KebaSensorDescription, ...] = (
 
@@ -85,16 +89,16 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
 
     KebaSensorDescription(
         key="charging_state",
-        name="Ladestatus",
+        translation_key="charging_state",
         icon="mdi:ev-station",
         data_key="state",
-        # Translate the integer state code to a human-readable string
-        value_fn=lambda d: KEBA_STATE_CODES.get(d.get("state", 0), f"Unbekannt ({d.get('state')})"),
+        # Returns a translation key resolved by HA (e.g. "no_vehicle" → "Kein Fahrzeug")
+        value_fn=lambda d: KEBA_STATE_CODES.get(d.get("state", 0)),
         enabled_default=True,
     ),
     KebaSensorDescription(
         key="power",
-        name="Ladeleistung",
+        translation_key="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -104,7 +108,7 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
     ),
     KebaSensorDescription(
         key="energy_session",
-        name="Session-Energie",
+        translation_key="energy_session",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -114,7 +118,7 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
     ),
     KebaSensorDescription(
         key="energy_total",
-        name="Gesamtenergie",
+        translation_key="energy_total",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -124,7 +128,7 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
     ),
     KebaSensorDescription(
         key="current_l1",
-        name="Strom L1",
+        translation_key="current_l1",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -134,7 +138,7 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
     ),
     KebaSensorDescription(
         key="current_l2",
-        name="Strom L2",
+        translation_key="current_l2",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -144,7 +148,7 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
     ),
     KebaSensorDescription(
         key="current_l3",
-        name="Strom L3",
+        translation_key="current_l3",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -154,7 +158,7 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
     ),
     KebaSensorDescription(
         key="current_limit_user",
-        name="Strom-Limit (User)",
+        translation_key="current_limit_user",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -167,7 +171,7 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
 
     KebaSensorDescription(
         key="voltage_l1",
-        name="Spannung L1",
+        translation_key="voltage_l1",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -177,7 +181,7 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
     ),
     KebaSensorDescription(
         key="voltage_l2",
-        name="Spannung L2",
+        translation_key="voltage_l2",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -187,7 +191,7 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
     ),
     KebaSensorDescription(
         key="voltage_l3",
-        name="Spannung L3",
+        translation_key="voltage_l3",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -197,7 +201,7 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
     ),
     KebaSensorDescription(
         key="power_factor",
-        name="Leistungsfaktor",
+        translation_key="power_factor",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:sine-wave",
@@ -207,7 +211,7 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
     ),
     KebaSensorDescription(
         key="current_limit_pct",
-        name="Strom-Limit (Prozent)",
+        translation_key="current_limit_pct",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
@@ -217,7 +221,7 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
     ),
     KebaSensorDescription(
         key="current_limit_hw",
-        name="Strom-Limit (Hardware)",
+        translation_key="current_limit_hw",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         data_key="curr_hw_ma",
@@ -226,25 +230,26 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
     ),
     KebaSensorDescription(
         key="current_limit_failsafe",
-        name="Strom-Limit (Failsafe)",
+        translation_key="current_limit_failsafe",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         data_key="curr_fs_ma",
-        # Failsafe current: applied when the OCPP backend connection is lost
+        # Applied when the OCPP backend connection is lost
         value_fn=lambda d: round(d.get("curr_fs_ma", 0) / 1000, 1),
         enabled_default=False,
     ),
     KebaSensorDescription(
         key="plug",
-        name="Stecker Status",
+        translation_key="plug",
         icon="mdi:power-plug",
         data_key="plug",
-        value_fn=lambda d: "Verbunden" if d.get("plug") else "Getrennt",
+        # Returns translation keys resolved by HA ("connected" / "disconnected")
+        value_fn=lambda d: "connected" if d.get("plug") else "disconnected",
         enabled_default=False,
     ),
     KebaSensorDescription(
         key="session_duration",
-        name="Session-Dauer",
+        translation_key="session_duration",
         icon="mdi:timer",
         native_unit_of_measurement="s",
         data_key="session_duration_s",
@@ -253,16 +258,15 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
     ),
     KebaSensorDescription(
         key="rfid_tag",
-        name="RFID Tag",
+        translation_key="rfid_tag",
         icon="mdi:card-account-details",
         data_key="rfid_tag",
-        # Raw value is a hex string, e.g. "00000000000000000000" when no card
         value_fn=lambda d: d.get("rfid_tag", ""),
         enabled_default=False,
     ),
     KebaSensorDescription(
         key="firmware",
-        name="Firmware",
+        translation_key="firmware",
         icon="mdi:chip",
         data_key="firmware",
         value_fn=lambda d: d.get("firmware", ""),
@@ -270,7 +274,7 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
     ),
     KebaSensorDescription(
         key="error1",
-        name="Fehlercode 1",
+        translation_key="error1",
         icon="mdi:alert-circle",
         data_key="error1",
         value_fn=lambda d: d.get("error1", 0),  # 0 = no error
@@ -278,7 +282,7 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
     ),
     KebaSensorDescription(
         key="error2",
-        name="Fehlercode 2",
+        translation_key="error2",
         icon="mdi:alert-circle",
         data_key="error2",
         value_fn=lambda d: d.get("error2", 0),

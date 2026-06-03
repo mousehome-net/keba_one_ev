@@ -24,21 +24,22 @@ CONF_PORT = "port"
 CONF_SCAN_INTERVAL = "scan_interval"
 
 # Charger state codes returned by "report 2" → "State"
+# Values are translation keys resolved via strings.json / translations/*.json
 KEBA_STATE_CODES = {
-    0: "Startup",
-    1: "Kein Fahrzeug",   # No vehicle connected
-    2: "Angeschlossen",   # Vehicle connected, not charging
-    3: "Lädt",            # Actively charging
-    4: "Fehler",          # Error condition
-    5: "Unterbrochen",    # Charging interrupted (e.g. by smart charging)
+    0: "startup",
+    1: "no_vehicle",
+    2: "connected",
+    3: "charging",
+    4: "error",
+    5: "interrupted",
 }
 
 # Phase mode labels returned by "report 2" → "X2 phaseSwitch"
-# Value 1 = 1-phase, 2 = 2-phase (uncommon), 3 = 3-phase
+# Values are translation keys; 2-phase (uncommon hardware) treated as 1-phase
 KEBA_PHASE_MODES = {
-    1: "1-phasig",
-    2: "2-phasig",
-    3: "3-phasig",
+    1: "1_phase",
+    2: "1_phase",
+    3: "3_phase",
 }
 
 # Hardware limits for charging current (in mA)

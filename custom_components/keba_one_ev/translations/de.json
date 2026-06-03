@@ -1,0 +1,81 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "SolarEdge One EV Charger einrichten",
+        "description": "Verbindung zum KEBA EV Charger konfigurieren.",
+        "data": {
+          "host": "IP-Adresse",
+          "port": "UDP Port",
+          "scan_interval": "Abfrageintervall (Sekunden)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung fehlgeschlagen. Bitte IP-Adresse und Port prüfen."
+    },
+    "abort": {
+      "already_configured": "Gerät ist bereits konfiguriert."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "charging_state": {
+        "name": "Ladestatus",
+        "state": {
+          "startup": "Startup",
+          "no_vehicle": "Kein Fahrzeug",
+          "connected": "Angeschlossen",
+          "charging": "Lädt",
+          "error": "Fehler",
+          "interrupted": "Unterbrochen"
+        }
+      },
+      "power": { "name": "Ladeleistung" },
+      "energy_session": { "name": "Session-Energie" },
+      "energy_total": { "name": "Gesamtenergie" },
+      "current_l1": { "name": "Strom L1" },
+      "current_l2": { "name": "Strom L2" },
+      "current_l3": { "name": "Strom L3" },
+      "current_limit_user": { "name": "Strom-Limit (User)" },
+      "voltage_l1": { "name": "Spannung L1" },
+      "voltage_l2": { "name": "Spannung L2" },
+      "voltage_l3": { "name": "Spannung L3" },
+      "power_factor": { "name": "Leistungsfaktor" },
+      "current_limit_pct": { "name": "Strom-Limit (Prozent)" },
+      "current_limit_hw": { "name": "Strom-Limit (Hardware)" },
+      "current_limit_failsafe": { "name": "Strom-Limit (Failsafe)" },
+      "plug": {
+        "name": "Stecker Status",
+        "state": {
+          "connected": "Verbunden",
+          "disconnected": "Getrennt"
+        }
+      },
+      "session_duration": { "name": "Session-Dauer" },
+      "rfid_tag": { "name": "RFID Tag" },
+      "firmware": { "name": "Firmware" },
+      "error1": { "name": "Fehlercode 1" },
+      "error2": { "name": "Fehlercode 2" }
+    },
+    "switch": {
+      "charging_enabled": { "name": "Laden freigegeben" }
+    },
+    "number": {
+      "charging_current": { "name": "Ladestrom" },
+      "charging_energy_target": { "name": "Ladeenergie-Ziel" }
+    },
+    "select": {
+      "phase_mode": {
+        "name": "Phasenmodus",
+        "state": {
+          "1_phase": "1-phasig",
+          "3_phase": "3-phasig"
+        }
+      }
+    },
+    "button": {
+      "unlock_cable": { "name": "Kabel entsperren" }
+    }
+  }
+}
