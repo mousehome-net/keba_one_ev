@@ -9,8 +9,8 @@ Communicates directly via the **KEBA UDP protocol** on the local network — no 
 
 | Platform | Entity | Default |
 |----------|--------|---------|
-| Binary Sensor | Vehicle Connected (`binary_sensor.*_vehicle_connected`) | ✅ enabled |
-| Binary Sensor | Charging (`binary_sensor.*_charging`) | ✅ enabled |
+| Binary Sensor | Plug — vehicle physically connected (`binary_sensor.*_vehicle_connected`) | ✅ enabled |
+| Binary Sensor | Charging — actively delivering power (`binary_sensor.*_charging`) | ✅ enabled |
 | Sensor | Charging State | ✅ enabled |
 | Sensor | Charging Power (W) | ✅ enabled |
 | Sensor | Session Energy (Wh) | ✅ enabled |
