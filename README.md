@@ -46,6 +46,14 @@ Disabled entities can be enabled individually under
 
 ## Installation
 
+### HACS (recommended)
+
+This integration is listed in the HACS default store.
+
+1. In HACS, go to **Integrations** and search for **SolarEdge One EV Charger**.
+2. Click **Download** and restart Home Assistant.
+3. Go to **Settings → Devices & Services → Add Integration** and search for **SolarEdge One EV Charger**.
+
 ### Manual
 
 1. Download or clone this repository.
@@ -55,12 +63,6 @@ Disabled entities can be enabled individually under
    ```
 3. Restart Home Assistant.
 4. Go to **Settings → Devices & Services → Add Integration** and search for **SolarEdge One EV Charger**.
-
-### HACS (manual repository)
-
-1. In HACS, go to **Integrations → ⋮ → Custom repositories**.
-2. Add this repository URL with category **Integration**.
-3. Install **SolarEdge One EV Charger** and restart Home Assistant.
 
 ---
 
