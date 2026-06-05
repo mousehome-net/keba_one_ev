@@ -90,9 +90,10 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
     KebaSensorDescription(
         key="charging_state",
         translation_key="charging_state",
+        device_class=SensorDeviceClass.ENUM,
         icon="mdi:ev-station",
+        options=list(KEBA_STATE_CODES.values()),
         data_key="state",
-        # Returns a translation key resolved by HA (e.g. "no_vehicle" → "Kein Fahrzeug")
         value_fn=lambda d: KEBA_STATE_CODES.get(d.get("state", 0)),
         enabled_default=True,
     ),
@@ -241,9 +242,10 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
     KebaSensorDescription(
         key="plug",
         translation_key="plug",
+        device_class=SensorDeviceClass.ENUM,
         icon="mdi:power-plug",
+        options=["connected", "disconnected"],
         data_key="plug",
-        # Returns translation keys resolved by HA ("connected" / "disconnected")
         value_fn=lambda d: "connected" if d.get("plug") else "disconnected",
         enabled_default=False,
     ),

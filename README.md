@@ -156,6 +156,17 @@ Replace `<device>` with your actual device name (visible in **Settings → Devic
 
 ---
 
+## Contributing Translations
+
+The integration ships with English (`en`) and German (`de`). To add a new language:
+
+1. Copy `custom_components/keba_one_ev/translations/en.json` to `translations/<lang>.json`  
+   (use the [BCP 47 language tag](https://www.iana.org/assignments/language-subtag-registry), e.g. `fr`, `nl`, `pl`).
+2. Translate all `name` and `state` values — keep all keys unchanged.
+3. Open a pull request. No code changes required.
+
+---
+
 ## Related Integrations
 
 This integration covers the EV charger only.

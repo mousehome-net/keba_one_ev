@@ -1,0 +1,85 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set Up SolarEdge One EV Charger",
+        "description": "Configure connection to KEBA EV Charger.",
+        "data": {
+          "host": "IP Address",
+          "port": "UDP Port",
+          "scan_interval": "Polling Interval (Seconds)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Connection failed. Please check IP address and port."
+    },
+    "abort": {
+      "already_configured": "Device is already configured."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "vehicle_connected": { "name": "Vehicle Connected" },
+      "charging": { "name": "Charging" }
+    },
+    "sensor": {
+      "charging_state": {
+        "name": "Charging State",
+        "state": {
+          "startup": "Startup",
+          "no_vehicle": "No Vehicle",
+          "connected": "Connected",
+          "charging": "Charging",
+          "error": "Error",
+          "interrupted": "Interrupted"
+        }
+      },
+      "power": { "name": "Charging Power" },
+      "energy_session": { "name": "Session Energy" },
+      "energy_total": { "name": "Total Energy" },
+      "current_l1": { "name": "Current L1" },
+      "current_l2": { "name": "Current L2" },
+      "current_l3": { "name": "Current L3" },
+      "current_limit_user": { "name": "Current Limit (User)" },
+      "voltage_l1": { "name": "Voltage L1" },
+      "voltage_l2": { "name": "Voltage L2" },
+      "voltage_l3": { "name": "Voltage L3" },
+      "power_factor": { "name": "Power Factor" },
+      "current_limit_pct": { "name": "Current Limit (Percent)" },
+      "current_limit_hw": { "name": "Current Limit (Hardware)" },
+      "current_limit_failsafe": { "name": "Current Limit (Failsafe)" },
+      "plug": {
+        "name": "Plug Status",
+        "state": {
+          "connected": "Connected",
+          "disconnected": "Disconnected"
+        }
+      },
+      "session_duration": { "name": "Session Duration" },
+      "rfid_tag": { "name": "RFID Tag" },
+      "firmware": { "name": "Firmware" },
+      "error1": { "name": "Error Code 1" },
+      "error2": { "name": "Error Code 2" }
+    },
+    "switch": {
+      "charging_enabled": { "name": "Charging Enabled" }
+    },
+    "number": {
+      "charging_current": { "name": "Charging Current" },
+      "charging_energy_target": { "name": "Charging Energy Target" }
+    },
+    "select": {
+      "phase_mode": {
+        "name": "Phase Mode",
+        "state": {
+          "1_phase": "1-Phase",
+          "3_phase": "3-Phase"
+        }
+      }
+    },
+    "button": {
+      "unlock_cable": { "name": "Unlock Cable" }
+    }
+  }
+}
