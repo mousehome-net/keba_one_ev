@@ -127,6 +127,7 @@ Response:   JSON object
 | Device | Firmware | Status |
 |--------|----------|--------|
 | SolarEdge ONE EV Charger (KEBA P30 OEM), S/N 99206288 | 04.00.44 | ✅ Working |
+| SolarEdge ONE EV Charger (KEBA P30 OEM) — community confirmed | 04.00.44 | ✅ Working |
 
 Other KEBA P30 variants that speak the same UDP protocol should work too, but have not been tested.
 
