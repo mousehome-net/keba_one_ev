@@ -110,6 +110,12 @@ Response:   JSON object
 | `currtime <mA> <s>` | Set current limit with automatic timeout |
 | `xswitchphase 1` / `xswitchphase 3` | Switch to 1-phase / 3-phase mode |
 
+> **Known limitation (SolarEdge ONE, firmware 04.x):** `ena 0` / `ena 1` get no
+> reply on this firmware and `Enable user` never changes — the **Charging
+> Enabled** switch has no effect. `curr` and `setenergy` work normally, so
+> setting the energy target to `0` is currently the only reliable way to stop
+> a session on this hardware. See [issue #10](https://github.com/mousehome-net/keba_one_ev/issues/10).
+
 ### Unit conventions
 
 | Field | Raw unit | Converted to |

@@ -2,8 +2,9 @@
 
 Provides two binary sensors derived from coordinator data:
 
-  vehicle_connected  True when a vehicle is physically plugged in (plug ≠ 0).
-                     Enabled by default — useful for automations and cards.
+  vehicle_connected  True only when the cable is plugged into the vehicle,
+                     not merely into the station (see plug.py). Enabled by
+                     default — useful for automations and cards.
 
   charging           True when the charger is actively delivering power
                      (KEBA state == 3).  Enabled by default.
@@ -25,6 +26,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import KebaCoordinator
+from .plug import is_vehicle_connected
 
 
 @dataclass(frozen=True)
@@ -39,7 +41,7 @@ BINARY_SENSORS: tuple[KebaBinarySensorDescription, ...] = (
         key="vehicle_connected",
         translation_key="vehicle_connected",
         device_class=BinarySensorDeviceClass.PLUG,
-        value_fn=lambda d: bool(d.get("plug")),
+        value_fn=lambda d: is_vehicle_connected(d.get("plug")),
     ),
     KebaBinarySensorDescription(
         key="charging",

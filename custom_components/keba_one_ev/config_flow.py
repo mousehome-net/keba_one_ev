@@ -10,9 +10,7 @@ Home Assistant host before the entry is persisted.
 """
 from __future__ import annotations
 
-import json
 import logging
-import socket
 
 import voluptuous as vol
 
@@ -27,6 +25,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
+from .udp import send_command as _udp_send_command
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,17 +43,10 @@ def _test_connection(host: str, port: int) -> str | None:
     Returns:
         Product name string on success, None on any failure.
     """
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.settimeout(3.0)
-    try:
-        sock.sendto(b"report 1", (host, port))
-        data, _ = sock.recvfrom(4096)
-        info = json.loads(data.decode())
-        return info.get("Product", "KEBA")
-    except Exception:
+    info = _udp_send_command(host, port, "report 1")
+    if info is None:
         return None
-    finally:
-        sock.close()
+    return info.get("Product", "KEBA")
 
 
 class KebaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

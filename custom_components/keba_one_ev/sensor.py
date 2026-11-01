@@ -51,6 +51,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, KEBA_STATE_CODES
 from .coordinator import KebaCoordinator
+from .plug import is_vehicle_connected
 
 
 @dataclass(frozen=True)
@@ -246,13 +247,14 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
         icon="mdi:power-plug",
         options=["connected", "disconnected"],
         data_key="plug",
-        value_fn=lambda d: "connected" if d.get("plug") else "disconnected",
+        value_fn=lambda d: "connected" if is_vehicle_connected(d.get("plug")) else "disconnected",
         enabled_default=False,
     ),
     KebaSensorDescription(
         key="session_duration",
         translation_key="session_duration",
         icon="mdi:timer",
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement="s",
         data_key="session_duration_s",
         value_fn=lambda d: d.get("session_duration_s", 0),

@@ -25,9 +25,8 @@ Unit conventions in the raw KEBA data:
 """
 from __future__ import annotations
 
-import json
 import logging
-import socket
+import time
 from datetime import timedelta
 from typing import Any
 
@@ -35,6 +34,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, DEFAULT_SCAN_INTERVAL
+from .fetch import fetch_all as _fetch_all
+from .session import session_duration_s as _session_duration_s
+from .udp import send_command as _udp_send_command
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,20 +79,7 @@ class KebaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             command: Plain-text KEBA command string, e.g. "report 2" or "curr 11000".
             timeout: Socket receive timeout in seconds.
         """
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.settimeout(timeout)
-        try:
-            sock.sendto(command.encode(), (self.host, self.port))
-            data, _ = sock.recvfrom(4096)
-            return json.loads(data.decode())
-        except socket.timeout:
-            _LOGGER.warning("Timeout sending '%s' to %s:%s", command, self.host, self.port)
-            return None
-        except Exception as err:
-            _LOGGER.error("Error sending '%s' to %s:%s: %s", command, self.host, self.port, err)
-            return None
-        finally:
-            sock.close()
+        return _udp_send_command(self.host, self.port, command, timeout)
 
     def send_command(self, command: str) -> bool:
         """Send a fire-and-forget control command to the charger.
@@ -173,7 +162,13 @@ class KebaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "session_id":       r100.get("Session ID", 0) if r100 else 0,
             "session_started":  r100.get("started", "") if r100 else "",   # ISO timestamp
             "session_ended":    r100.get("ended", "") if r100 else "",
-            "session_duration_s": r100.get("started[s]", 0) if r100 else 0,  # seconds since start
+            # started[s]/ended[s] are Unix epoch timestamps, not elapsed
+            # time (issue #6) -- the actual duration is the gap between them.
+            "session_duration_s": _session_duration_s(
+                r100.get("started[s]", 0) if r100 else 0,
+                r100.get("ended[s]", 0) if r100 else 0,
+                time.time(),
+            ),
             "rfid_tag":         r100.get("RFID tag", "") if r100 else "",
             "rfid_class":       r100.get("RFID class", "") if r100 else "",
             "session_reason":   r100.get("reason", 0) if r100 else 0,  # stop reason code
@@ -184,10 +179,8 @@ class KebaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         Must run in an executor thread (called via async_add_executor_job).
         Sends each report independently so partial results are still usable
-        if one report times out.
+        if one report times out. A short pause between requests and a
+        single retry for the two mandatory reports avoid taking every
+        entity Unavailable on one dropped UDP packet (see issue #8).
         """
-        r1   = self._send("report 1")
-        r2   = self._send("report 2")
-        r3   = self._send("report 3")
-        r100 = self._send("report 100")
-        return r1, r2, r3, r100
+        return _fetch_all(self._send)
