@@ -11,6 +11,8 @@ Communicates directly via the **KEBA UDP protocol** on the local network — no 
 |----------|--------|---------|
 | Binary Sensor | Plug — vehicle physically connected (`binary_sensor.*_vehicle_connected`) | ✅ enabled |
 | Binary Sensor | Charging — actively delivering power (`binary_sensor.*_charging`) | ✅ enabled |
+| Binary Sensor | Backend Connected — OCPP/backend link active (e.g. SolarEdge app/cloud) | ☑ disabled |
+| Binary Sensor | COM Module Present | ☑ disabled |
 | Sensor | Charging State | ✅ enabled |
 | Sensor | Charging Power (W) | ✅ enabled |
 | Sensor | Session Energy (Wh) | ✅ enabled |

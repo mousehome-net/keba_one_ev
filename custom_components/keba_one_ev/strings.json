@@ -60,7 +60,9 @@
     },
     "binary_sensor": {
       "vehicle_connected": { "name": "Vehicle Connected" },
-      "charging": { "name": "Charging" }
+      "charging": { "name": "Charging" },
+      "backend_connected": { "name": "Backend Connected" },
+      "com_module_present": { "name": "COM Module Present" }
     },
     "switch": {
       "charging_enabled": { "name": "Charging Enabled" }
