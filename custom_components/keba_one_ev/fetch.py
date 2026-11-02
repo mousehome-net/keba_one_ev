@@ -9,8 +9,11 @@ those two get one retry before giving up.
 """
 from __future__ import annotations
 
+import logging
 import time
 from typing import Callable
+
+_LOGGER = logging.getLogger(__name__)
 
 REPORT_PAUSE_S = 0.5
 
@@ -44,4 +47,9 @@ def _send_with_retry(
     if result is None:
         sleep(REPORT_PAUSE_S)
         result = send(command)
+        if result is None:
+            # Both attempts dropped -- unlike a single lost packet (logged
+            # at DEBUG in udp.py), this is worth surfacing since the
+            # coordinator update will fail if it's report 2 or 3 (issue #11).
+            _LOGGER.warning("'%s' timed out twice in a row", command)
     return result

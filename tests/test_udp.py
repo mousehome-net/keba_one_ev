@@ -68,6 +68,17 @@ class TestSendCommandBinding(unittest.TestCase):
         self.assertIsNone(result)
         mock_sock.close.assert_called_once()
 
+    def test_timeout_does_not_log_above_debug(self):
+        # A single dropped UDP packet is routine and already handled by
+        # the retry in fetch.py -- it must not reach WARNING and flood
+        # HA's "repeated issues" view (issue #11).
+        mock_sock = MagicMock()
+        mock_sock.recvfrom.side_effect = socket.timeout
+
+        with patch.object(self.udp.socket, "socket", return_value=mock_sock):
+            with self.assertNoLogs(self.udp._LOGGER.name, level="INFO"):
+                self.udp.send_command("10.0.0.5", 7090, "report 1", timeout=0.01)
+
     def test_tch_ok_acknowledgement_is_treated_as_success(self):
         # Control commands (ena, curr, setenergy, ...) reply with the
         # plain-text "TCH-OK: done", not JSON -- issue #10.

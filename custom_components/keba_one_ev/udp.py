@@ -48,7 +48,11 @@ def send_command(host: str, port: int, command: str, timeout: float = 3.0) -> di
                 return {}
             return json.loads(text)
         except socket.timeout:
-            _LOGGER.warning("Timeout sending '%s' to %s:%s", command, host, port)
+            # A single dropped UDP packet is routine on this protocol and is
+            # already handled by the retry in fetch.py -- logging it above
+            # DEBUG would flood HA's "repeated issues" view for something
+            # that self-heals (see issue #11).
+            _LOGGER.debug("Timeout sending '%s' to %s:%s", command, host, port)
             return None
         except Exception as err:
             _LOGGER.error("Error sending '%s' to %s:%s: %s", command, host, port, err)

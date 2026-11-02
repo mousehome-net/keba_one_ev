@@ -98,6 +98,46 @@ class TestFetchAll(unittest.TestCase):
         self.assertEqual(send.calls.count("report 1"), 1)
         self.assertEqual(send.calls.count("report 100"), 1)
 
+    def test_no_warning_when_retry_recovers(self):
+        # A single dropped packet that the retry recovers from is routine
+        # (issue #11) and must not reach WARNING.
+        send = FakeSend({
+            "report 1": [{"Product": "ONE_EV"}],
+            "report 2": [None, {"State": 2}],
+            "report 3": [{"P": 100}],
+            "report 100": [{"Session ID": 1}],
+        })
+
+        with self.assertNoLogs(self.fetch._LOGGER.name, level="WARNING"):
+            self.fetch.fetch_all(send, sleep=self._sleep)
+
+    def test_warning_when_mandatory_report_fails_twice(self):
+        send = FakeSend({
+            "report 1": [{"Product": "ONE_EV"}],
+            "report 2": [None, None],
+            "report 3": [{"P": 100}],
+            "report 100": [{"Session ID": 1}],
+        })
+
+        with self.assertLogs(self.fetch._LOGGER.name, level="WARNING") as cm:
+            self.fetch.fetch_all(send, sleep=self._sleep)
+
+        self.assertEqual(len(cm.output), 1)
+        self.assertIn("report 2", cm.output[0])
+
+    def test_no_warning_when_optional_report_fails(self):
+        # report 1/100 are best-effort and not retried, so one dropped
+        # packet there must stay silent at this level too.
+        send = FakeSend({
+            "report 1": [None],
+            "report 2": [{"State": 2}],
+            "report 3": [{"P": 100}],
+            "report 100": [None],
+        })
+
+        with self.assertNoLogs(self.fetch._LOGGER.name, level="WARNING"):
+            self.fetch.fetch_all(send, sleep=self._sleep)
+
 
 if __name__ == "__main__":
     unittest.main()
