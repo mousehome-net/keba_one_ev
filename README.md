@@ -112,11 +112,28 @@ Response:   JSON object
 | `currtime <mA> <s>` | Set current limit with automatic timeout |
 | `xswitchphase 1` / `xswitchphase 3` | Switch to 1-phase / 3-phase mode |
 
-> **Known limitation (SolarEdge ONE, firmware 04.x):** `ena 0` / `ena 1` get no
-> reply on this firmware and `Enable user` never changes — the **Charging
-> Enabled** switch has no effect. `curr` and `setenergy` work normally, so
-> setting the energy target to `0` is currently the only reliable way to stop
-> a session on this hardware. See [issue #10](https://github.com/mousehome-net/keba_one_ev/issues/10).
+### Which write commands actually work
+
+Write support depends on the firmware and on who manages the charger. What has
+been observed so far (read-only access always works):
+
+| Command | SolarEdge ONE, FW 04.00.70, back office on (maintainer) | SolarEdge ONE EV Pro, FW 04.00.42, back office "SolarEdge ONE EV" (#12) |
+|---------|------------------------------|------------------------------|
+| `curr` | ✅ replies `TCH-OK`, value stays | ⚠️ accepted, reset to 0 within seconds |
+| `setenergy` | ✅ replies `TCH-OK`, value stays | not reported |
+| `ena` | ❌ empty reply, no effect | ⚠️ accepted, reset within seconds |
+| `xswitchphase` | ❌ empty reply, phase unchanged | ⚠️ accepted, reset to 3 within 1–2 s |
+
+Tested on the maintainer's unit without a vehicle connected, so phase switching
+may behave differently with a car plugged in. On the EV Pro the SolarEdge back
+office appears to override local settings; with "Other Backoffice" (own OCPP
+server) a `curr` setting was kept, and with "Use Offline" the charger stopped
+answering UDP. Because `setenergy` and `curr` hold on the maintainer's unit,
+setting the energy target to `0` is currently the most reliable way to stop a
+session there. See [issue #10](https://github.com/mousehome-net/keba_one_ev/issues/10)
+and [issue #12](https://github.com/mousehome-net/keba_one_ev/issues/12).
+
+The `Backend Connected` diagnostic sensor shows whether a back office is attached.
 
 ### Unit conventions
 

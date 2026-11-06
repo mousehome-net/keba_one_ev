@@ -90,6 +90,28 @@ class TestSendCommandBinding(unittest.TestCase):
 
         self.assertIsNotNone(result)
 
+    def test_empty_reply_to_control_command_is_treated_as_success(self):
+        # ena / xswitchphase answer with an empty datagram on some
+        # firmwares -- issue #12.
+        for command in ("ena 0", "xswitchphase 1"):
+            mock_sock = MagicMock()
+            mock_sock.recvfrom.return_value = (b"", ("10.0.0.5", 7090))
+
+            with patch.object(self.udp.socket, "socket", return_value=mock_sock):
+                result = self.udp.send_command("10.0.0.5", 7090, command)
+
+            self.assertIsNotNone(result, command)
+
+    def test_empty_reply_to_report_is_still_a_failure(self):
+        mock_sock = MagicMock()
+        mock_sock.recvfrom.return_value = (b"", ("10.0.0.5", 7090))
+
+        with patch.object(self.udp.socket, "socket", return_value=mock_sock):
+            with self.assertLogs(self.udp._LOGGER, level="ERROR"):
+                result = self.udp.send_command("10.0.0.5", 7090, "report 2")
+
+        self.assertIsNone(result)
+
     def test_returns_none_on_malformed_json(self):
         mock_sock = MagicMock()
         mock_sock.recvfrom.return_value = (b"not json", ("10.0.0.5", 7090))

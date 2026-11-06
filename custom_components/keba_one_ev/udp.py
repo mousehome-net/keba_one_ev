@@ -46,6 +46,11 @@ def send_command(host: str, port: int, command: str, timeout: float = 3.0) -> di
             # are JSON.
             if text.startswith("TCH-OK"):
                 return {}
+            # Some firmwares answer ena/xswitchphase with an empty datagram
+            # instead of TCH-OK -- issue #12. Reports are always JSON, so an
+            # empty reply to a non-report command still counts as received.
+            if not text.strip() and not command.startswith("report"):
+                return {}
             return json.loads(text)
         except socket.timeout:
             # A single dropped UDP packet is routine on this protocol and is
