@@ -27,12 +27,36 @@ Communicates directly via the **KEBA UDP protocol** on the local network — no 
 | Sensor | RFID Tag | ☑ disabled |
 | Sensor | Firmware | ☑ disabled |
 | Sensor | Error Code 1 / 2 | ☑ disabled |
-| Switch | Charging Enabled | ✅ enabled |
+| Switch | Charging Enabled (⚠️ no effect on some firmware, see below) | ✅ enabled |
 | Number | Charging Current (6–16 A slider) | ✅ enabled |
-| Select | Phase Mode (1-phase / 3-phase) | ✅ enabled |
+| Number | Charging Energy Target (kWh, 0 = no limit) | ✅ enabled |
+| Select | Phase Mode (1-phase / 3-phase) (⚠️ unverified, see below) | ✅ enabled |
+| Button | Unlock Cable | ✅ enabled |
 
 Disabled entities can be enabled individually under
 **Settings → Devices & Services → SolarEdge One EV Charger → device → (entity list)**.
+
+### What you can automate
+
+**Reading always works** and is safe to build automations on: vehicle connected,
+charging, charging state, power, current and voltage per phase, session energy
+and duration, total energy, error codes and whether a back office is attached.
+Use these for notifications, statistics or cost tracking.
+
+**Controlling the charger is more limited.** Verified on a SolarEdge ONE
+(FW 04.00.70, no vehicle connected):
+
+| Action | Verified | Notes |
+|--------|----------|-------|
+| Set charging current (6–16 A) | ✅ value is accepted and stays | Whether a car follows it, and whether the SolarEdge back office overrides it, depends on firmware (see below). |
+| Pause charging with `curr 0` | ✅ accepted, `Curr user` becomes 0 | Not available on the slider yet, which starts at 6 A. Values between 1 and 5 A are ignored by the charger. |
+| Set energy target | ✅ value is accepted and stays | `0` means *no limit*, it does **not** stop a session. Whether a session stops at the target is not verified yet. |
+| Charging Enabled switch (`ena`) | ❌ no reply, no effect | Don't rely on it. |
+| Phase mode (`xswitchphase`) | ❌ no effect without a vehicle | Not verified with a car yet. |
+| Unlock cable | not verified | |
+
+Not everything has been tested with a car connected. Entities marked ⚠️ may
+change or be removed once their behaviour is confirmed.
 
 ---
 
@@ -119,7 +143,7 @@ been observed so far (read-only access always works):
 
 | Command | SolarEdge ONE, FW 04.00.70, back office on (maintainer) | SolarEdge ONE EV Pro, FW 04.00.42, back office "SolarEdge ONE EV" (#12) |
 |---------|------------------------------|------------------------------|
-| `curr` | ✅ replies `TCH-OK`, value stays | ⚠️ accepted, reset to 0 within seconds |
+| `curr` (6000–16000, or `0` to pause) | ✅ replies `TCH-OK`, value stays; 1–5999 is ignored | ⚠️ accepted, reset to 0 within seconds |
 | `setenergy` | ✅ replies `TCH-OK`, value stays | not reported |
 | `ena` | ❌ empty reply, no effect | ⚠️ accepted, reset within seconds |
 | `xswitchphase` | ❌ empty reply, phase unchanged | ⚠️ accepted, reset to 3 within 1–2 s |
@@ -128,9 +152,9 @@ Tested on the maintainer's unit without a vehicle connected, so phase switching
 may behave differently with a car plugged in. On the EV Pro the SolarEdge back
 office appears to override local settings; with "Other Backoffice" (own OCPP
 server) a `curr` setting was kept, and with "Use Offline" the charger stopped
-answering UDP. Because `setenergy` and `curr` hold on the maintainer's unit,
-setting the energy target to `0` is currently the most reliable way to stop a
-session there. See [issue #10](https://github.com/mousehome-net/keba_one_ev/issues/10)
+answering UDP. Setting the energy target to `0` means *no limit* and does not
+stop a session; on the maintainer's unit `curr 0` is the verified way to pause.
+See [issue #10](https://github.com/mousehome-net/keba_one_ev/issues/10)
 and [issue #12](https://github.com/mousehome-net/keba_one_ev/issues/12).
 
 The `Backend Connected` diagnostic sensor shows whether a back office is attached.
