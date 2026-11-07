@@ -195,8 +195,10 @@ and [issue #12](https://github.com/mousehome-net/keba_one_ev/issues/12).
 
 | Device | Firmware | Status |
 |--------|----------|--------|
-| SolarEdge ONE EV Charger (KEBA P30 OEM), S/N 99206288 | 04.00.44 | ✅ Working |
+| SolarEdge ONE EV Charger (KEBA P30 OEM), maintainer | 04.00.70 | ✅ Reading works; `curr` and `setenergy` verified (no car connected) |
+| SolarEdge ONE EV (EV Pro), user report in [#12](https://github.com/mousehome-net/keba_one_ev/issues/12) | 04.00.42 | ✅ Reading works; `curr` verified in an active session |
 | SolarEdge ONE EV Charger (KEBA P30 OEM) — community confirmed | 04.00.44 | ✅ Working |
+| KeContact P30 `KC-P30-EC2404B2-E00-SL` (SolarEdge Home EV Charger), user report in [#5](https://github.com/mousehome-net/keba_one_ev/issues/5) | P30 v 3.10.53 | ⏳ `report 1` answers; `report 2`/`report 3` not confirmed yet |
 
 Other KEBA P30 variants that speak the same UDP protocol should work too, but have not been tested.
 
