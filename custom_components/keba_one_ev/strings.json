@@ -64,12 +64,8 @@
       "backend_connected": { "name": "Backend Connected" },
       "com_module_present": { "name": "COM Module Present" }
     },
-    "switch": {
-      "charging_enabled": { "name": "Charging Enabled" }
-    },
     "number": {
-      "charging_current": { "name": "Charging Current" },
-      "charging_energy_target": { "name": "Charging Energy Target" }
+      "charging_current": { "name": "Charging Current" }
     },
     "select": {
       "phase_mode": {

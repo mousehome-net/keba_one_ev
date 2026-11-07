@@ -64,12 +64,8 @@
       "backend_connected": { "name": "Backend verbunden" },
       "com_module_present": { "name": "COM-Modul vorhanden" }
     },
-    "switch": {
-      "charging_enabled": { "name": "Laden freigegeben" }
-    },
     "number": {
-      "charging_current": { "name": "Ladestrom" },
-      "charging_energy_target": { "name": "Ladeenergie-Ziel" }
+      "charging_current": { "name": "Ladestrom" }
     },
     "select": {
       "phase_mode": {

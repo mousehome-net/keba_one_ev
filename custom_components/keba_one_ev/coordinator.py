@@ -2,7 +2,7 @@
 
 The coordinator is the single point of contact with the physical charger.
 It runs a timed polling loop (default: every 10 s) and fetches all four KEBA
-UDP reports in one go. All entity platforms (sensor, switch, number, select)
+UDP reports in one go. All entity platforms (binary_sensor, sensor, number, select, button)
 subscribe to the coordinator instead of opening their own sockets.
 
 KEBA UDP protocol summary
@@ -36,6 +36,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, DEFAULT_SCAN_INTERVAL
 from .fetch import fetch_all as _fetch_all
 from .session import session_duration_s as _session_duration_s
+from .stale import StaleTolerance
 from .udp import send_command as _udp_send_command
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,6 +58,7 @@ class KebaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> None:
         self.host = host
         self.port = port
+        self._stale = StaleTolerance()
         super().__init__(
             hass,
             _LOGGER,
@@ -84,7 +86,7 @@ class KebaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def send_command(self, command: str) -> bool:
         """Send a fire-and-forget control command to the charger.
 
-        Used by switch/number/select entities to change charger state.
+        Used by the number/select/button entities to change charger state.
         The charger acknowledges most commands with a small JSON response;
         we only check whether a response arrived, not its content.
 
@@ -107,22 +109,41 @@ class KebaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         Raises UpdateFailed if the charger is unreachable or returns
         incomplete data (report 2 and 3 are mandatory).
         """
+        failure: str | None = None
+        cause: Exception | None = None
         try:
             r1, r2, r3, r100 = await self.hass.async_add_executor_job(self._fetch_all)
         except Exception as err:
-            raise UpdateFailed(f"Error communicating with KEBA charger: {err}") from err
+            r1 = r2 = r3 = r100 = None
+            failure = f"Error communicating with KEBA charger: {err}"
+            cause = err
+        else:
+            # report 2 (state/limits) and report 3 (measurements) are essential
+            if not r2 or not r3:
+                failure = "Incomplete data from KEBA charger (report 2 or 3 missing)"
 
-        # report 2 (state/limits) and report 3 (measurements) are essential
-        if not r2 or not r3:
-            raise UpdateFailed("Incomplete data from KEBA charger (report 2 or 3 missing)")
+        if failure is not None:
+            # An isolated failed poll must not flip every entity to unavailable
+            # (issue #5); only keep going for a few polls in a row.
+            if self._stale.on_failure(has_previous=self.data is not None):
+                _LOGGER.debug("%s -- keeping the last values", failure)
+                return self.data
+            raise UpdateFailed(failure) from cause
+        self._stale.on_success()
+
+        # report 1 is best-effort: when it is missing keep what we knew before
+        # instead of reporting "not connected" for a merely missed poll.
+        previous = self.data or {}
 
         return {
             # ── report 1: device identity ─────────────────────────────
-            "product":    r1.get("Product", "") if r1 else "",
-            "serial":     r1.get("Serial", "") if r1 else "",
-            "firmware":   r1.get("Firmware", "") if r1 else "",
-            "com_module": r1.get("COM-module", 0) if r1 else 0,  # 1 = COM module present
-            "backend":    r1.get("Backend", 0) if r1 else 0,     # 1 = connected to OCPP backend
+            "product":    r1.get("Product", "") if r1 else previous.get("product", ""),
+            "serial":     r1.get("Serial", "") if r1 else previous.get("serial", ""),
+            "firmware":   r1.get("Firmware", "") if r1 else previous.get("firmware", ""),
+            # 1 = COM module present; None = unknown (report 1 not answered yet)
+            "com_module": r1.get("COM-module", 0) if r1 else previous.get("com_module"),
+            # 1 = connected to OCPP backend; None = unknown
+            "backend":    r1.get("Backend", 0) if r1 else previous.get("backend"),
 
             # ── report 2: charging system state ──────────────────────
             "state":         r2.get("State", 0),       # 0-5, see KEBA_STATE_CODES

@@ -64,13 +64,13 @@ BINARY_SENSORS: tuple[KebaBinarySensorDescription, ...] = (
         key="backend_connected",
         translation_key="backend_connected",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        value_fn=lambda d: bool(d.get("backend")),
+        value_fn=lambda d: None if d.get("backend") is None else bool(d["backend"]),
         enabled_default=False,
     ),
     KebaBinarySensorDescription(
         key="com_module_present",
         translation_key="com_module_present",
-        value_fn=lambda d: bool(d.get("com_module")),
+        value_fn=lambda d: None if d.get("com_module") is None else bool(d["com_module"]),
         enabled_default=False,
     ),
 )

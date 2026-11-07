@@ -27,11 +27,12 @@ Communicates directly via the **KEBA UDP protocol** on the local network — no 
 | Sensor | RFID Tag | ☑ disabled |
 | Sensor | Firmware | ☑ disabled |
 | Sensor | Error Code 1 / 2 | ☑ disabled |
-| Switch | Charging Enabled (⚠️ no effect on some firmware, see below) | ✅ enabled |
 | Number | Charging Current (6–16 A slider) | ✅ enabled |
-| Number | Charging Energy Target (kWh, 0 = no limit) | ✅ enabled |
-| Select | Phase Mode (1-phase / 3-phase) (⚠️ unverified, see below) | ✅ enabled |
+| Select | Phase Mode (1-phase / 3-phase) (⚠️ unverified, see below; shows *unknown* on units without a phase switch) | ✅ enabled |
 | Button | Unlock Cable | ✅ enabled |
+
+Entities keep their last value over one or two failed polls in a row (for example on a
+slow WiFi link) before they become unavailable.
 
 Disabled entities can be enabled individually under
 **Settings → Devices & Services → SolarEdge One EV Charger → device → (entity list)**.
@@ -49,10 +50,9 @@ active session (FW 04.00.42):
 
 | Action | Verified | Notes |
 |--------|----------|-------|
-| Set charging current (6–16 A) | ✅ value stays, and in an active session the real current follows it | This is the control that works reliably, for example for PV surplus charging. One user reports no effect on their unit (see below). |
+| Set charging current (6–16 A) | ✅ value stays, and in an active session the real current follows it | This is the control that works reliably, for example for PV surplus charging. |
 | Pause charging with `curr 0` | ❌ does not pause an active session | Accepted without a car (`Curr user` becomes 0). In an active session (FW 04.00.42) the current dropped for about 3–6 s and then returned to full, `Curr user` stayed unchanged (#12). |
-| Set energy target | ❌ does not stop a session | The value is accepted, but with a target below the energy already delivered charging was only interrupted for 4–7 s and then resumed (#12, FW 04.00.42). `0` means *no limit*. |
-| Charging Enabled switch (`ena`) | ❌ no reply, no effect | Don't rely on it. |
+| Start / stop a session | ❌ not possible through this interface | `ena`, `curr 0` and the energy target (`setenergy`) were all tested and do not stop a session. The energy target only interrupts charging for 4–7 s (#12, FW 04.00.42). Stop it from the car or its app. |
 | Phase mode (`xswitchphase`) | ❌ no effect without a vehicle | Not verified with a car yet. |
 | Unlock cable | not verified | |
 
@@ -145,8 +145,8 @@ Response:   JSON object
 | Command | Effect | Status on tested firmware |
 |---------|--------|---------------------------|
 | `curr <mA>` | Set charging current limit (6000–16000) | ✅ works; `0` does not pause a session |
-| `setenergy <0.1 Wh>` | Per-session energy target (0 = no limit) | ❌ value is accepted, but a session is not stopped |
-| `ena 1` / `ena 0` | Enable / disable charging | ❌ no effect on any tested firmware |
+| `setenergy <0.1 Wh>` | Per-session energy target (0 = no limit), not used by this integration | ❌ value is accepted, but a session is not stopped |
+| `ena 1` / `ena 0` | Enable / disable charging, not used by this integration | ❌ no effect on any tested firmware |
 | `xswitchphase 1` / `xswitchphase 3` | Switch to 1-phase / 3-phase mode | ❌ no effect without a car, not verified with one |
 | `unlock` | Release the cable lock | not verified |
 | `currtime <mA> <s>` | Set current limit for a limited time, then it reverts (not used by this integration) | temporary only |
@@ -200,6 +200,7 @@ and [issue #12](https://github.com/mousehome-net/keba_one_ev/issues/12).
 | SolarEdge ONE EV (EV Pro), user report in [#12](https://github.com/mousehome-net/keba_one_ev/issues/12) | 04.00.42 | ✅ Reading works; `curr` verified in an active session |
 | SolarEdge ONE EV Charger (`ONE_EV`), user report in [#10](https://github.com/mousehome-net/keba_one_ev/issues/10) | 04.00.70 | ✅ Reading works; `curr` verified in an active session |
 | SolarEdge ONE EV Charger (KEBA P30 OEM) — community confirmed | 04.00.44 | ✅ Working |
+| SolarEdge Home EV Charger `KC-P30-EC2404B2-E00-SL` (single-phase), user report in [#5](https://github.com/mousehome-net/keba_one_ev/issues/5) | P30 v3.10.53 | ✅ Setup works, entities have values (DSW1.3 ON, over WiFi) |
 
 Other KEBA P30 variants that speak the same UDP protocol should work too, but have not been tested.
 

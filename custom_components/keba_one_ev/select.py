@@ -72,8 +72,9 @@ class KebaPhaseSelect(CoordinatorEntity[KebaCoordinator], SelectEntity):
         data = self.coordinator.data
         if data is None:
             return None
-        # Default to 3-phase if the value is missing or unexpected
-        return PHASE_FROM_INT.get(data.get("phase_switch", 3), "3_phase")
+        # Unknown for anything else, e.g. 0 on single-phase units without a
+        # phase switch (issue #5)
+        return PHASE_FROM_INT.get(data.get("phase_switch"))
 
     async def async_select_option(self, option: str) -> None:
         """Send the xswitchphase command and refresh coordinator data."""

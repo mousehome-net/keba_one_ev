@@ -64,12 +64,8 @@
       "error1": { "name": "Error Code 1" },
       "error2": { "name": "Error Code 2" }
     },
-    "switch": {
-      "charging_enabled": { "name": "Charging Enabled" }
-    },
     "number": {
-      "charging_current": { "name": "Charging Current" },
-      "charging_energy_target": { "name": "Charging Energy Target" }
+      "charging_current": { "name": "Charging Current" }
     },
     "select": {
       "phase_mode": {

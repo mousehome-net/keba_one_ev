@@ -1,7 +1,7 @@
 """SE One EV Charger – Home Assistant custom integration.
 
 Integrates the SolarEdge ONE EV Charger (hardware: KEBA P30) into Home Assistant
-via the KEBA UDP protocol. Provides sensors, a charging switch, a current slider,
+via the KEBA UDP protocol. Provides sensors, binary sensors, a current slider,
 and a phase-mode selector.
 
 Setup flow:
@@ -9,7 +9,7 @@ Setup flow:
   2. async_setup_entry() creates a KebaCoordinator and performs the first data fetch.
   3. The coordinator is stored in hass.data[DOMAIN][entry.entry_id] so all entity
      platforms can access it without creating additional connections.
-  4. All four platforms (sensor, switch, number, select) are forwarded to their
+  4. All platforms (binary_sensor, sensor, number, select, button) are forwarded to their
      respective modules.
 """
 from __future__ import annotations
@@ -25,7 +25,7 @@ from .coordinator import KebaCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 # All platforms provided by this integration
-PLATFORMS = ["binary_sensor", "sensor", "switch", "number", "select", "button"]
+PLATFORMS = ["binary_sensor", "sensor", "number", "select", "button"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Store coordinator so entity platforms can retrieve it by entry_id
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    # Spin up all platforms (sensor.py, switch.py, number.py, select.py)
+    # Spin up all platforms (sensor.py, number.py, select.py, ...)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
