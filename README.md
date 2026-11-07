@@ -44,11 +44,12 @@ and duration, total energy, error codes and whether a back office is attached.
 Use these for notifications, statistics or cost tracking.
 
 **Controlling the charger is more limited.** Verified on a SolarEdge ONE
-(FW 04.00.70, no vehicle connected):
+(FW 04.00.70, no vehicle connected) and, for the current, also by a user in an
+active session (FW 04.00.42):
 
 | Action | Verified | Notes |
 |--------|----------|-------|
-| Set charging current (6–16 A) | ✅ value is accepted and stays | Whether a car follows it, and whether the SolarEdge back office overrides it, depends on firmware (see below). |
+| Set charging current (6–16 A) | ✅ value stays, and in an active session the real current follows it | This is the control that works reliably, for example for PV surplus charging. One user reports no effect on their unit (see below). |
 | Pause charging with `curr 0` | ✅ accepted, `Curr user` becomes 0 | Not available on the slider yet, which starts at 6 A. Values between 1 and 5 A are ignored by the charger. |
 | Set energy target | ✅ value is accepted and stays | `0` means *no limit*, it does **not** stop a session. Whether a session stops at the target is not verified yet. |
 | Charging Enabled switch (`ena`) | ❌ no reply, no effect | Don't rely on it. |
@@ -72,13 +73,25 @@ change or be removed once their behaviour is confirmed.
 
 ## Installation
 
-### HACS (recommended)
+### Marketplace (recommended, Home Assistant 2026.11 or newer)
 
-This integration is listed in the HACS default store.
+This integration is listed in the default repository that the Home Assistant
+Marketplace uses.
+
+1. Go to **Settings → Marketplace** and search for **SolarEdge One EV Charger**.
+2. Download it and restart Home Assistant.
+3. Go to **Settings → Devices & Services → Add Integration** and search for **SolarEdge One EV Charger**.
+
+### HACS (Home Assistant 2026.10 or older)
+
+On older Home Assistant versions the same listing is available through HACS.
 
 1. In HACS, go to **Integrations** and search for **SolarEdge One EV Charger**.
 2. Click **Download** and restart Home Assistant.
 3. Go to **Settings → Devices & Services → Add Integration** and search for **SolarEdge One EV Charger**.
+
+Installations made with HACS keep receiving updates after upgrading to 2026.11,
+the Marketplace takes them over.
 
 ### Manual
 
@@ -138,26 +151,29 @@ Response:   JSON object
 
 ### Which write commands actually work
 
-Write support depends on the firmware and on who manages the charger. What has
-been observed so far (read-only access always works):
+Write support depends on the firmware. What has been observed so far (read-only
+access always works):
 
-| Command | SolarEdge ONE, FW 04.00.70, back office on (maintainer) | SolarEdge ONE EV Pro, FW 04.00.42, back office "SolarEdge ONE EV" (#12) |
+| Command | SolarEdge ONE, FW 04.00.70 (maintainer, no car) | SolarEdge ONE EV, FW 04.00.42 (#12, also in an active session) |
 |---------|------------------------------|------------------------------|
-| `curr` (6000–16000, or `0` to pause) | ✅ replies `TCH-OK`, value stays; 1–5999 is ignored | ⚠️ accepted, reset to 0 within seconds |
-| `setenergy` | ✅ replies `TCH-OK`, value stays | not reported |
-| `ena` | ❌ empty reply, no effect | ⚠️ accepted, reset within seconds |
-| `xswitchphase` | ❌ empty reply, phase unchanged | ⚠️ accepted, reset to 3 within 1–2 s |
+| `curr` (6000–16000, or `0` to pause) | ✅ `TCH-OK`, value stays; 1–5999 is ignored; `0` accepted | ✅ value stays, the real charging current follows it |
+| `setenergy` | ✅ `TCH-OK`, value stays | not tested |
+| `ena` | ❌ empty reply, no effect | ❌ ignored, also in a session |
+| `xswitchphase` | ❌ empty reply, phase unchanged (no car) | not re-tested |
+| `currtime <mA> <s>` | not tested | temporary: `currtime 0 1` paused for a few seconds, then full current returned |
 
-Tested on the maintainer's unit without a vehicle connected, so phase switching
-may behave differently with a car plugged in. On the EV Pro the SolarEdge back
-office appears to override local settings; with "Other Backoffice" (own OCPP
-server) a `curr` setting was kept, and with "Use Offline" the charger stopped
-answering UDP. Setting the energy target to `0` means *no limit* and does not
-stop a session; on the maintainer's unit `curr 0` is the verified way to pause.
-See [issue #10](https://github.com/mousehome-net/keba_one_ev/issues/10)
+One user (#10, P30 with SolarEdge ONE firmware) reports that `ena`, the current
+setpoint and the energy target have no effect on their unit, so behaviour does
+vary between units. Not verified yet with a car connected: whether `curr 0`
+pauses an active session, whether a session stops at the energy target, and
+whether `xswitchphase` switches the phases.
+
+Setting the energy target to `0` means *no limit* and does not stop a session.
+In #12 the user also saw that with the back office set to "Use Offline" the
+charger stops answering UDP, and that "Other Backoffice" (own OCPP server) keeps
+local settings. The `Backend Connected` diagnostic sensor shows whether a back
+office is attached. See [issue #10](https://github.com/mousehome-net/keba_one_ev/issues/10)
 and [issue #12](https://github.com/mousehome-net/keba_one_ev/issues/12).
-
-The `Backend Connected` diagnostic sensor shows whether a back office is attached.
 
 ### Unit conventions
 
