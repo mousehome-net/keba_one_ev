@@ -166,11 +166,13 @@ access always works):
 | `xswitchphase` | ❌ empty reply, phase unchanged (no car) | not re-tested |
 | `currtime <mA> <s>` | not tested | temporary: `currtime 0 1` paused for a few seconds, then full current returned |
 
-One user (#10, P30 with SolarEdge ONE firmware) reports that `ena`, the current
-setpoint and the energy target have no effect on their unit, so behaviour does
-vary between units. Not verified yet with a car connected: whether `curr 0`
-pauses an active session, whether a session stops at the energy target, and
-whether `xswitchphase` switches the phases.
+A second user with the same firmware as the maintainer (04.00.70, #10) saw
+`curr` between 6 and 16 A change the real current in an active session, while
+`curr 0`, `ena`, `setenergy` and `xswitchphase` showed no visible effect. That
+test may have been confounded by the car's own cloud control and is being
+repeated. Not verified yet with a car connected: whether `curr 0` pauses an
+active session, whether a session stops at the energy target, and whether
+`xswitchphase` switches the phases.
 
 Setting the energy target to `0` means *no limit* and does not stop a session.
 In #12 the user also saw that with the back office set to "Use Offline" the
@@ -197,6 +199,7 @@ and [issue #12](https://github.com/mousehome-net/keba_one_ev/issues/12).
 |--------|----------|--------|
 | SolarEdge ONE EV Charger (KEBA P30 OEM), maintainer | 04.00.70 | ✅ Reading works; `curr` and `setenergy` verified (no car connected) |
 | SolarEdge ONE EV (EV Pro), user report in [#12](https://github.com/mousehome-net/keba_one_ev/issues/12) | 04.00.42 | ✅ Reading works; `curr` verified in an active session |
+| SolarEdge ONE EV Charger (`ONE_EV`), user report in [#10](https://github.com/mousehome-net/keba_one_ev/issues/10) | 04.00.70 | ✅ Reading works; `curr` verified in an active session |
 | SolarEdge ONE EV Charger (KEBA P30 OEM) — community confirmed | 04.00.44 | ✅ Working |
 
 Other KEBA P30 variants that speak the same UDP protocol should work too, but have not been tested.
