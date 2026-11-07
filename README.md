@@ -142,12 +142,16 @@ Response:   JSON object
 
 ### Write commands
 
-| Command | Effect |
-|---------|--------|
-| `ena 1` / `ena 0` | Enable / disable charging |
-| `curr <mA>` | Set charging current limit (min 6000, max 16000) |
-| `currtime <mA> <s>` | Set current limit with automatic timeout |
-| `xswitchphase 1` / `xswitchphase 3` | Switch to 1-phase / 3-phase mode |
+| Command | Effect | Status on tested firmware |
+|---------|--------|---------------------------|
+| `curr <mA>` | Set charging current limit (0 to pause, otherwise 6000–16000) | ✅ works |
+| `setenergy <0.1 Wh>` | Per-session energy target (0 = no limit) | ✅ value is accepted, stopping at the target not verified |
+| `ena 1` / `ena 0` | Enable / disable charging | ❌ no effect on any tested firmware |
+| `xswitchphase 1` / `xswitchphase 3` | Switch to 1-phase / 3-phase mode | ❌ no effect without a car, not verified with one |
+| `unlock` | Release the cable lock | not verified |
+| `currtime <mA> <s>` | Set current limit for a limited time, then it reverts (not used by this integration) | temporary only |
+
+Details and sources are in the next section.
 
 ### Which write commands actually work
 
