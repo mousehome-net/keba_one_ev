@@ -50,8 +50,8 @@ active session (FW 04.00.42):
 | Action | Verified | Notes |
 |--------|----------|-------|
 | Set charging current (6–16 A) | ✅ value stays, and in an active session the real current follows it | This is the control that works reliably, for example for PV surplus charging. One user reports no effect on their unit (see below). |
-| Pause charging with `curr 0` | ✅ accepted, `Curr user` becomes 0 | Not available on the slider yet, which starts at 6 A. Values between 1 and 5 A are ignored by the charger. |
-| Set energy target | ✅ value is accepted and stays | `0` means *no limit*, it does **not** stop a session. Whether a session stops at the target is not verified yet. |
+| Pause charging with `curr 0` | ❌ does not pause an active session | Accepted without a car (`Curr user` becomes 0). In an active session (FW 04.00.42) the current dropped for about 3–6 s and then returned to full, `Curr user` stayed unchanged (#12). |
+| Set energy target | ❌ does not stop a session | The value is accepted, but with a target below the energy already delivered charging was only interrupted for 4–7 s and then resumed (#12, FW 04.00.42). `0` means *no limit*. |
 | Charging Enabled switch (`ena`) | ❌ no reply, no effect | Don't rely on it. |
 | Phase mode (`xswitchphase`) | ❌ no effect without a vehicle | Not verified with a car yet. |
 | Unlock cable | not verified | |
@@ -144,8 +144,8 @@ Response:   JSON object
 
 | Command | Effect | Status on tested firmware |
 |---------|--------|---------------------------|
-| `curr <mA>` | Set charging current limit (0 to pause, otherwise 6000–16000) | ✅ works |
-| `setenergy <0.1 Wh>` | Per-session energy target (0 = no limit) | ✅ value is accepted, stopping at the target not verified |
+| `curr <mA>` | Set charging current limit (6000–16000) | ✅ works; `0` does not pause a session |
+| `setenergy <0.1 Wh>` | Per-session energy target (0 = no limit) | ❌ value is accepted, but a session is not stopped |
 | `ena 1` / `ena 0` | Enable / disable charging | ❌ no effect on any tested firmware |
 | `xswitchphase 1` / `xswitchphase 3` | Switch to 1-phase / 3-phase mode | ❌ no effect without a car, not verified with one |
 | `unlock` | Release the cable lock | not verified |
@@ -160,8 +160,8 @@ access always works):
 
 | Command | SolarEdge ONE, FW 04.00.70 (maintainer, no car) | SolarEdge ONE EV, FW 04.00.42 (#12, also in an active session) |
 |---------|------------------------------|------------------------------|
-| `curr` (6000–16000, or `0` to pause) | ✅ `TCH-OK`, value stays; 1–5999 is ignored; `0` accepted | ✅ value stays, the real charging current follows it |
-| `setenergy` | ✅ `TCH-OK`, value stays | not tested |
+| `curr` (6000–16000) | ✅ `TCH-OK`, value stays; 1–5999 is ignored; `0` accepted without a car | ✅ value stays, the real current follows it; `0` pauses only for a few seconds |
+| `setenergy` | ✅ `TCH-OK`, value stays | ❌ interrupts charging for 4–7 s, then it resumes |
 | `ena` | ❌ empty reply, no effect | ❌ ignored, also in a session |
 | `xswitchphase` | ❌ empty reply, phase unchanged (no car) | not re-tested |
 | `currtime <mA> <s>` | not tested | temporary: `currtime 0 1` paused for a few seconds, then full current returned |
@@ -170,11 +170,10 @@ A second user with the same firmware as the maintainer (04.00.70, #10) saw
 `curr` between 6 and 16 A change the real current in an active session, while
 `curr 0`, `ena`, `setenergy` and `xswitchphase` showed no visible effect. That
 test may have been confounded by the car's own cloud control and is being
-repeated. Not verified yet with a car connected: whether `curr 0` pauses an
-active session, whether a session stops at the energy target, and whether
-`xswitchphase` switches the phases.
+repeated. Not verified yet with a car connected: whether `xswitchphase`
+switches the phases. A session cannot be stopped through this interface on
+the firmware tested so far; stop it from the car or its app.
 
-Setting the energy target to `0` means *no limit* and does not stop a session.
 In #12 the user also saw that with the back office set to "Use Offline" the
 charger stops answering UDP, and that "Other Backoffice" (own OCPP server) keeps
 local settings. The `Backend Connected` diagnostic sensor shows whether a back
