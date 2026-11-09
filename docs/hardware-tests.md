@@ -109,6 +109,16 @@ This is an inference from the reply pattern, not a confirmed list. Probing furth
 names this way is possible but risky: a recognised command is executed at once,
 with unknown effects.
 
+### 2026-11-09, minimum gap between two commands
+
+KEBA requires at least 100 ms between any two UDP commands (`t_UDP_pause`) and at
+least 5 s between repetitions of the same command (`t_COM_pause`). The integration
+keeps 500 ms between the polled reports, but right after a control command the
+refresh can send `report 1` without a gap. Tested with read commands only:
+`report 2` immediately followed by `report 1`, 15 times without a gap and 15 times
+with 150 ms, 6 s between rounds. All 60 requests were answered, so on this unit a
+missing gap did not cause dropped replies.
+
 ## Community results
 
 | Source | Unit | Result |
