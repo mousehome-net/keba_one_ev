@@ -69,6 +69,31 @@ SolarEdge ONE EV Charger, product `ONE_EV`, firmware `04.00.70`,
   `Curr user` and `Max curr` stayed 10000, `Enable sys` stayed 1, the phase current
   stayed at about 9.9 A. So no periodic re-sending is needed on this unit.
 
+### 2026-11-09, no vehicle: how the SolarEdge app switches phases
+
+**Network of the charger** (nmap from the LAN, firewall state table of the router):
+
+- No TCP port is open: all 65 535 TCP ports answer "closed". No web server, no
+  REST API, no Modbus TCP (port 502 is closed).
+- UDP: only 7090 (KEBA protocol) and 5353 (mDNS, which only returns the host name).
+- The charger holds exactly one long-lived outbound connection: TCP to an AWS host
+  in Frankfurt on port 443 whose TLS certificate is `*.wevo.energy`. This matches
+  the SolarEdge guide, which lists "Wevo Energy" as a back office option, and the
+  `RFID tag` value `weev_dummy` in `report 100`.
+
+**Phase switch in the SolarEdge app (3 → 1 phase):** between two polls
+(`X2 phaseSwitch` 3 at 12:04:58, 1 at 12:05:41) both `X2 phaseSwitch` and
+`X2 default` changed from 3 to 1, so it is a stored setting. During the switch no
+new connection to the charger appeared in the firewall state table: the app does
+not talk to the charger locally, the command takes the existing cloud
+connection. The app kept working after `x2src 4` had been sent earlier, so that
+command did not take over phase control.
+
+**UDP `x2 1` (back to 3 phases), vehicle not connected, more than 5 minutes after
+the switch (the guide requires 5 minutes between switches):** empty reply,
+`X2 phaseSwitch` stayed 1 for 60 s. So the documented UDP phase switch does not
+work on this firmware, neither in a session nor when idle.
+
 ## Community results
 
 | Source | Unit | Result |
@@ -88,9 +113,11 @@ SolarEdge ONE EV Charger, product `ONE_EV`, firmware `04.00.70`,
 - `currtime` is not usable here: the delayed form (`currtime 12000 10`) is
   acknowledged but ignored, so there is nothing to build on. `curr` stays the only
   way to set the current.
-- Phase switching has no effect on FW 04.00.70 in a session, neither with
-  `xswitchphase` (not documented by KEBA) nor with the documented `x2src 4` +
-  `x2 0`.
+- Phase switching over UDP has no effect on FW 04.00.70, neither in a session nor
+  when idle, neither with `xswitchphase` (not documented by KEBA) nor with the
+  documented `x2src 4` + `x2 0|1`. The charger does switch phases when told to by
+  the SolarEdge app, which reaches it through the cloud back office. The result is
+  readable: `X2 phaseSwitch` shows the active setting.
 - One report from FW 04.00.42 (#12) says `xswitchphase 1` was accepted and
   reset to 3 within seconds, which has not been re-tested.
 - `unlock` is acknowledged but ignored while a session is running; the KEBA
@@ -98,9 +125,6 @@ SolarEdge ONE EV Charger, product `ONE_EV`, firmware `04.00.70`,
 
 ## Not tested yet
 
-- Whether `x2src 4` changed the phase toggle source: it cannot be read back on
-  this firmware, and the SolarEdge app's own phase switching should be checked
-  after the test.
 - `unlock` right after a stop, as the guide requires ("the charging process has to
   be stopped first, e.g. via `currtime 0 1` or `ena 0`").
 - `unlock` while the vehicle is connected but not charging (`State 2`): does
