@@ -52,7 +52,7 @@ current also by a user on FW 04.00.42:
 |--------|----------|-------|
 | Set charging current (6–16 A) | ✅ value stays, and in an active session the real current follows it | This is the control that works reliably, for example for PV surplus charging. |
 | Pause charging with `curr 0` | ❌ does not pause an active session | Accepted without a car (`Curr user` becomes 0). In an active session the current dropped to ~0 A for about 3–10 s and then returned to full without any command, `Curr user` stayed unchanged (FW 04.00.70 and, in #12, FW 04.00.42). |
-| Start / stop a session | ❌ not possible through this interface | `ena`, `curr 0` and the energy target (`setenergy`) were all tested and do not stop a session. The energy target only interrupts charging for 4–7 s (#12, FW 04.00.42). Stop it from the car or its app. |
+| Start / stop a session | ❌ not possible through this interface | `ena`, `curr 0`, `currtime 0 1` and the energy target (`setenergy`) were all tested and do not stop a session. The energy target only interrupts charging for 4–7 s (#12, FW 04.00.42). Stop it from the car or its app. |
 | Phase mode (`xswitchphase`) | ❌ no effect | Empty reply; in an active session on FW 04.00.70 the phases and `X2 phaseSwitch` stayed unchanged for over a minute. |
 | Unlock cable | ⚠️ no effect during a session | Replies `TCH-OK`, but with a session running the cable stayed locked (`Plug` 7) and charging continued. Not tested while idle. |
 
@@ -148,7 +148,7 @@ Response:   JSON object
 | `ena 1` / `ena 0` | Enable / disable charging, not used by this integration | ❌ no effect on any tested firmware |
 | `xswitchphase 1` / `xswitchphase 3` | Switch to 1-phase / 3-phase mode | ❌ no effect (tested with an active session) |
 | `unlock` | Release the cable lock | ⚠️ accepted, no effect during a session; not tested while idle |
-| `currtime <mA> <s>` | Per the KEBA guide: apply the current after `<s>` seconds, not permanent (reset when the plug is pulled); `currtime 0 1` should stop charging. Not used by this integration | ❌ acknowledged, but the delayed change is not applied on FW 04.00.70 |
+| `currtime <mA> <s>` | Per the KEBA guide: apply the current after `<s>` seconds, not permanent (reset when the plug is pulled); `currtime 0 1` should stop charging. Not used by this integration | ❌ no lasting effect on FW 04.00.70: `currtime 12000 10` is acknowledged but ignored, `currtime 0 1` pauses for about 15 s and charging then resumes by itself |
 
 Details and sources are in the next section.
 
@@ -165,7 +165,7 @@ access always works):
 | `setenergy` | ✅ `TCH-OK`, value stays | ❌ interrupts charging for 4–7 s, then it resumes |
 | `ena` | ❌ empty reply, no effect | ❌ ignored, also in a session |
 | `xswitchphase` | ❌ empty reply, phases unchanged in a session | not re-tested |
-| `currtime <mA> <s>` | ❌ `currtime 12000 10`: `TCH-OK`, but `Curr timer` / `Tmo CT` / `Curr user` unchanged and no effect for 45 s | `currtime 0 1` paused for a few seconds, then full current returned |
+| `currtime <mA> <s>` | ❌ `currtime 12000 10`: `TCH-OK`, but `Curr timer` / `Tmo CT` / `Curr user` unchanged and no effect for 45 s; `currtime 0 1`: paused about 15 s, then charging resumed by itself | ❌ `currtime 0 1` paused for a few seconds, then full current returned |
 
 A second user with the same firmware as the maintainer (04.00.70, #10) saw
 `curr` between 6 and 16 A change the real current in an active session, while
