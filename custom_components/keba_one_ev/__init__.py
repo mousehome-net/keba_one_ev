@@ -1,7 +1,7 @@
 """SE One EV Charger – Home Assistant custom integration.
 
 Integrates the SolarEdge ONE EV Charger (and other chargers speaking the KEBA UDP
-protocol, such as the SolarEdge Home EV Charger = KEBA P30) into Home Assistant. Provides sensors, binary sensors, a current slider
+protocol) into Home Assistant. Provides sensors, binary sensors, a current slider
 and a cable-unlock button.
 
 Setup flow:

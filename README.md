@@ -1,6 +1,6 @@
 # SolarEdge One EV Charger – Home Assistant Custom Integration
 
-A Home Assistant custom integration for the **SolarEdge ONE EV Charger** and other chargers that speak the **KEBA UDP protocol**, for example the SolarEdge Home EV Charger (a KEBA P30).
+A Home Assistant custom integration for the **SolarEdge ONE EV Charger** and other chargers that speak the **KEBA UDP protocol**.
 Communicates directly via the **KEBA UDP protocol** on the local network — no cloud, no SolarEdge account required.
 
 ---
@@ -99,7 +99,7 @@ card; it updates with every poll, so about every 10 s):
 ## Requirements
 
 - Home Assistant 2024.1 or newer
-- A charger that speaks the KEBA UDP protocol (SolarEdge ONE EV Charger, SolarEdge Home EV Charger / KEBA P30) reachable on the local network
+- A charger that speaks the KEBA UDP protocol (for example the SolarEdge ONE EV Charger) reachable on the local network
 - UDP port **7090** accessible from the Home Assistant host
 
 > **No additional Python packages required.** The integration uses only the Python standard library (`socket`, `json`).
@@ -156,12 +156,17 @@ During setup a live connection test is performed — the integration sends `repo
 
 ## Protocol Background
 
-The SolarEdge Home EV Charger is a **KEBA P30** (it reports `KC-P30-…` and a
-`P30 v3.x` firmware, see [#5](https://github.com/mousehome-net/keba_one_ev/issues/5)).
-The SolarEdge ONE EV Charger speaks the same proprietary **KEBA UDP protocol**, but
-reports `Product: ONE_EV` with its own `04.00.xx` firmware and deviates from KEBA's
-documentation in several places (see [docs/hardware-tests.md](docs/hardware-tests.md)).
-Whether it is built on a KEBA P30 is not confirmed.
+The integration speaks the proprietary **KEBA UDP protocol**. Which hardware is
+behind it differs:
+
+- The SolarEdge ONE EV Charger reports `Product: ONE_EV` with its own `04.00.xx`
+  firmware and deviates from KEBA's documentation in several places (see
+  [docs/hardware-tests.md](docs/hardware-tests.md)). Whether it is built on a KEBA
+  P30 is not confirmed.
+- One reported charger sold as SolarEdge Home EV Charger identifies itself as a KEBA
+  `KC-P30-EC2404B2-E00-SL` with a `P30 v3.10.53` firmware
+  ([#5](https://github.com/mousehome-net/keba_one_ev/issues/5)). That is one unit,
+  it does not show that every Home EV Charger is a KEBA P30.
 
 The protocol:
 

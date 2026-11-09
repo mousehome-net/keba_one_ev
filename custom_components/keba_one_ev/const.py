@@ -1,8 +1,7 @@
 """Constants for the SE One EV Charger integration.
 
 This integration communicates with a SolarEdge ONE EV Charger (or another charger
-speaking the KEBA UDP protocol, e.g. the KEBA-P30-based SolarEdge Home EV Charger)
-via the KEBA UDP protocol on port 7090.
+speaking the KEBA UDP protocol) via the KEBA UDP protocol on port 7090.
 
 Protocol notes:
   - Commands are sent as plain-text UDP datagrams (e.g. "report 2")
