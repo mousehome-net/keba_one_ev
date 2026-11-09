@@ -1,6 +1,6 @@
 # SolarEdge One EV Charger – Home Assistant Custom Integration
 
-A Home Assistant custom integration for the **SolarEdge ONE EV Charger** (hardware: KEBA P30).
+A Home Assistant custom integration for the **SolarEdge ONE EV Charger** and other chargers that speak the **KEBA UDP protocol**, for example the SolarEdge Home EV Charger (a KEBA P30).
 Communicates directly via the **KEBA UDP protocol** on the local network — no cloud, no SolarEdge account required.
 
 ---
@@ -99,7 +99,7 @@ card; it updates with every poll, so about every 10 s):
 ## Requirements
 
 - Home Assistant 2024.1 or newer
-- SolarEdge ONE EV Charger (KEBA P30 OEM) reachable on the local network
+- A charger that speaks the KEBA UDP protocol (SolarEdge ONE EV Charger, SolarEdge Home EV Charger / KEBA P30) reachable on the local network
 - UDP port **7090** accessible from the Home Assistant host
 
 > **No additional Python packages required.** The integration uses only the Python standard library (`socket`, `json`).
@@ -156,8 +156,14 @@ During setup a live connection test is performed — the integration sends `repo
 
 ## Protocol Background
 
-The SolarEdge ONE EV Charger is a rebranded **KEBA P30**.
-It uses the proprietary **KEBA UDP protocol**:
+The SolarEdge Home EV Charger is a **KEBA P30** (it reports `KC-P30-…` and a
+`P30 v3.x` firmware, see [#5](https://github.com/mousehome-net/keba_one_ev/issues/5)).
+The SolarEdge ONE EV Charger speaks the same proprietary **KEBA UDP protocol**, but
+reports `Product: ONE_EV` with its own `04.00.xx` firmware and deviates from KEBA's
+documentation in several places (see [docs/hardware-tests.md](docs/hardware-tests.md)).
+Whether it is built on a KEBA P30 is not confirmed.
+
+The protocol:
 
 ```
 Transport:  UDP unicast
@@ -233,13 +239,13 @@ and [issue #12](https://github.com/mousehome-net/keba_one_ev/issues/12).
 
 | Device | Firmware | Status |
 |--------|----------|--------|
-| SolarEdge ONE EV Charger (KEBA P30 OEM), maintainer | 04.00.70 | ✅ Reading works; `curr` and `setenergy` verified (no car connected) |
+| SolarEdge ONE EV Charger (`ONE_EV`), maintainer | 04.00.70 | ✅ Reading works; `curr` verified in an active session |
 | SolarEdge ONE EV (EV Pro), user report in [#12](https://github.com/mousehome-net/keba_one_ev/issues/12) | 04.00.42 | ✅ Reading works; `curr` verified in an active session |
 | SolarEdge ONE EV Charger (`ONE_EV`), user report in [#10](https://github.com/mousehome-net/keba_one_ev/issues/10) | 04.00.70 | ✅ Reading works; `curr` verified in an active session |
-| SolarEdge ONE EV Charger (KEBA P30 OEM) — community confirmed | 04.00.44 | ✅ Working |
+| SolarEdge ONE EV Charger — community confirmed (earlier README entry, source not documented) | 04.00.44 | ✅ Working |
 | SolarEdge Home EV Charger `KC-P30-EC2404B2-E00-SL` (single-phase), user report in [#5](https://github.com/mousehome-net/keba_one_ev/issues/5) | P30 v3.10.53 | ✅ Setup works, entities have values (DSW1.3 ON, over WiFi) |
 
-Other KEBA P30 variants that speak the same UDP protocol should work too, but have not been tested.
+Other chargers that speak the same UDP protocol may work too, but have not been tested.
 
 ---
 
