@@ -47,6 +47,20 @@ SolarEdge ONE EV Charger, product `ONE_EV`, firmware `04.00.70`,
 | `currtime 0 1` | `TCH-OK`. Current fell to 0.05 A and `State` to 2 for about 15 s, then charging started again by itself (`State 3` at about 23 s, 13.7 A at about 28 s). `Curr user`, `Curr timer`, `Tmo CT` and `Enable user` never changed and no further command was sent. The KEBA guide describes this command as a stop until overwritten. |
 | `currtime 12000 10` | `TCH-OK`, but nothing happened: `Curr timer` stayed 16000, `Tmo CT` stayed 0, `Curr user`, `Max curr` and the current stayed unchanged for 45 s (samples every ~5 s). According to the KEBA guide `Curr user` should have become 12000 after 10 s. |
 
+### 2026-11-09, validation of two assumptions (active session)
+
+- **`Max curr %` is the control pilot duty cycle in units of 0.1 %**, not a
+  percentage of the limit. Measured: `266` at 16 A and `166` at 10 A; the pilot
+  formula (duty % = A / 0.6) gives 26.7 % and 16.7 %, and the idle value `1000`
+  (100 %) is the state without a pilot signal.
+- **The charger caps the offered current at `Curr HW`.** With `Curr HW` 16000,
+  `curr 17000` was acknowledged and `Curr user` became 17000, but `Max curr`
+  stayed 16000, `Max curr %` stayed 266 and the phase currents did not change
+  over 20 s. So `Max curr` is the minimum of `Curr user` and `Curr HW`, which makes
+  `Curr HW` a safe upper limit for a current setting. Not covered: units with
+  `Curr HW` above 16000, and states in which `Curr HW` reads 0 (the guide allows
+  0).
+
 ## Community results
 
 | Source | Unit | Result |
