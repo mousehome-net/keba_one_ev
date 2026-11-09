@@ -45,19 +45,18 @@ and duration, total energy, error codes and whether a back office is attached.
 Use these for notifications, statistics or cost tracking.
 
 **Controlling the charger is more limited.** Verified on a SolarEdge ONE
-(FW 04.00.70, no vehicle connected) and, for the current, also by a user in an
-active session (FW 04.00.42):
+(FW 04.00.70) with and without a vehicle in an active session, and for the
+current also by a user on FW 04.00.42:
 
 | Action | Verified | Notes |
 |--------|----------|-------|
 | Set charging current (6–16 A) | ✅ value stays, and in an active session the real current follows it | This is the control that works reliably, for example for PV surplus charging. |
-| Pause charging with `curr 0` | ❌ does not pause an active session | Accepted without a car (`Curr user` becomes 0). In an active session (FW 04.00.42) the current dropped for about 3–6 s and then returned to full, `Curr user` stayed unchanged (#12). |
+| Pause charging with `curr 0` | ❌ does not pause an active session | Accepted without a car (`Curr user` becomes 0). In an active session the current dropped to ~0 A for about 3–10 s and then returned to full without any command, `Curr user` stayed unchanged (FW 04.00.70 and, in #12, FW 04.00.42). |
 | Start / stop a session | ❌ not possible through this interface | `ena`, `curr 0` and the energy target (`setenergy`) were all tested and do not stop a session. The energy target only interrupts charging for 4–7 s (#12, FW 04.00.42). Stop it from the car or its app. |
-| Phase mode (`xswitchphase`) | ❌ no effect without a vehicle | Not verified with a car yet. |
-| Unlock cable | not verified | |
+| Phase mode (`xswitchphase`) | ❌ no effect | Empty reply; in an active session on FW 04.00.70 the phases and `X2 phaseSwitch` stayed unchanged for over a minute. |
+| Unlock cable | ⚠️ no effect during a session | Replies `TCH-OK`, but with a session running the cable stayed locked (`Plug` 7) and charging continued. Not tested while idle. |
 
-Not everything has been tested with a car connected. Entities marked ⚠️ may
-change or be removed once their behaviour is confirmed.
+Entities marked ⚠️ may change or be removed once their behaviour is confirmed.
 
 ---
 
@@ -147,8 +146,8 @@ Response:   JSON object
 | `curr <mA>` | Set charging current limit (6000–16000) | ✅ works; `0` does not pause a session |
 | `setenergy <0.1 Wh>` | Per-session energy target (0 = no limit), not used by this integration | ❌ value is accepted, but a session is not stopped |
 | `ena 1` / `ena 0` | Enable / disable charging, not used by this integration | ❌ no effect on any tested firmware |
-| `xswitchphase 1` / `xswitchphase 3` | Switch to 1-phase / 3-phase mode | ❌ no effect without a car, not verified with one |
-| `unlock` | Release the cable lock | not verified |
+| `xswitchphase 1` / `xswitchphase 3` | Switch to 1-phase / 3-phase mode | ❌ no effect (tested with an active session) |
+| `unlock` | Release the cable lock | ⚠️ accepted, no effect during a session; not tested while idle |
 | `currtime <mA> <s>` | Set current limit for a limited time, then it reverts (not used by this integration) | temporary only |
 
 Details and sources are in the next section.
@@ -158,12 +157,12 @@ Details and sources are in the next section.
 Write support depends on the firmware. What has been observed so far (read-only
 access always works):
 
-| Command | SolarEdge ONE, FW 04.00.70 (maintainer, no car) | SolarEdge ONE EV, FW 04.00.42 (#12, also in an active session) |
+| Command | SolarEdge ONE, FW 04.00.70 (maintainer, also in an active session) | SolarEdge ONE EV, FW 04.00.42 (#12, also in an active session) |
 |---------|------------------------------|------------------------------|
-| `curr` (6000–16000) | ✅ `TCH-OK`, value stays; 1–5999 is ignored; `0` accepted without a car | ✅ value stays, the real current follows it; `0` pauses only for a few seconds |
+| `curr` (6000–16000) | ✅ `TCH-OK`, current follows (14.7 → 9.95 A); 1–5999 is ignored; `0` pauses only ~10 s | ✅ value stays, the real current follows it; `0` pauses only for a few seconds |
 | `setenergy` | ✅ `TCH-OK`, value stays | ❌ interrupts charging for 4–7 s, then it resumes |
 | `ena` | ❌ empty reply, no effect | ❌ ignored, also in a session |
-| `xswitchphase` | ❌ empty reply, phase unchanged (no car) | not re-tested |
+| `xswitchphase` | ❌ empty reply, phases unchanged in a session | not re-tested |
 | `currtime <mA> <s>` | not tested | temporary: `currtime 0 1` paused for a few seconds, then full current returned |
 
 A second user with the same firmware as the maintainer (04.00.70, #10) saw
