@@ -44,6 +44,7 @@ SolarEdge ONE EV Charger, product `ONE_EV`, firmware `04.00.70`,
 | `curr 0` | `TCH-OK`. After 2 s about 0.05 A and `State 2`. From about 12 s charging started again by itself (`State 3`), full 14.75 A at 20 s, before any command from us. `Curr user` stayed 16000 throughout. Without a vehicle the same command had set `Curr user` to 0. |
 | `xswitchphase 1` | Empty reply. All three phases stayed at about 14.7 A and `X2 phaseSwitch` stayed 3 for about 70 s (samples every 4–8 s). The session was not interrupted. |
 | `unlock` | `TCH-OK`. `Plug` stayed 7 (cable locked) and charging continued for 25 s. |
+| `x2src 4`, then `x2 0` (the phase switch as documented by KEBA) | Both replies empty. `X2 phaseSwitch` stayed 3 and all three phases kept carrying current (about 10 A, later 6 A) for over 3 minutes. The guide describes `x2` as triggering an *external* phase switch via contact X2; whether this unit has one is unknown. `report 2` on this firmware has no `X2 phaseSwitch source` field. |
 | `currtime 0 1` | `TCH-OK`. Current fell to 0.05 A and `State` to 2 for about 15 s, then charging started again by itself (`State 3` at about 23 s, 13.7 A at about 28 s). `Curr user`, `Curr timer`, `Tmo CT` and `Enable user` never changed and no further command was sent. The KEBA guide describes this command as a stop until overwritten. |
 | `currtime 12000 10` | `TCH-OK`, but nothing happened: `Curr timer` stayed 16000, `Tmo CT` stayed 0, `Curr user`, `Max curr` and the current stayed unchanged for 45 s (samples every ~5 s). According to the KEBA guide `Curr user` should have become 12000 after 10 s. |
 
@@ -87,18 +88,19 @@ SolarEdge ONE EV Charger, product `ONE_EV`, firmware `04.00.70`,
 - `currtime` is not usable here: the delayed form (`currtime 12000 10`) is
   acknowledged but ignored, so there is nothing to build on. `curr` stays the only
   way to set the current.
-- `xswitchphase` had no effect on FW 04.00.70 in a session. One report from
-  FW 04.00.42 (#12) says it was accepted and reset within seconds, which has not
-  been re-tested.
-- `unlock` is acknowledged but ignored while a session is running.
+- Phase switching has no effect on FW 04.00.70 in a session, neither with
+  `xswitchphase` (not documented by KEBA) nor with the documented `x2src 4` +
+  `x2 0`.
+- One report from FW 04.00.42 (#12) says `xswitchphase 1` was accepted and
+  reset to 3 within seconds, which has not been re-tested.
+- `unlock` is acknowledged but ignored while a session is running; the KEBA
+  guide requires charging to be stopped first.
 
 ## Not tested yet
 
-- The phase switch as documented by KEBA: `x2src 4` (toggle source = UDP), then
-  `x2 0` (1 phase) / `x2 1` (3 phases), with a cool-down of 5 minutes between
-  switches. `xswitchphase`, which the integration uses, is not in either KEBA
-  guide. Changing `x2src` may take over phase control from the SolarEdge back
-  office, so it needs care.
+- Whether `x2src 4` changed the phase toggle source: it cannot be read back on
+  this firmware, and the SolarEdge app's own phase switching should be checked
+  after the test.
 - `unlock` right after a stop, as the guide requires ("the charging process has to
   be stopped first, e.g. via `currtime 0 1` or `ena 0`").
 - `unlock` while the vehicle is connected but not charging (`State 2`): does

@@ -53,7 +53,7 @@ current also by a user on FW 04.00.42:
 | Set charging current (6–16 A) | ✅ value stays, and in an active session the real current follows it | This is the control that works reliably, for example for PV surplus charging. |
 | Pause charging with `curr 0` | ❌ does not pause an active session | Accepted without a car (`Curr user` becomes 0). In an active session the current dropped to ~0 A for about 3–10 s and then returned to full without any command, `Curr user` stayed unchanged (FW 04.00.70 and, in #12, FW 04.00.42). |
 | Start / stop a session | ❌ not possible through this interface | `ena`, `curr 0`, `currtime 0 1` and the energy target (`setenergy`) were all tested and do not stop a session. The energy target only interrupts charging for 4–7 s (#12, FW 04.00.42). Stop it from the car or its app. |
-| Phase mode (`xswitchphase`) | ❌ no effect | Empty reply; in an active session on FW 04.00.70 the phases and `X2 phaseSwitch` stayed unchanged for over a minute. |
+| Phase mode (`xswitchphase`) | ❌ no effect | Empty reply; in an active session on FW 04.00.70 the phases and `X2 phaseSwitch` stayed unchanged for over a minute. The phase switch documented by KEBA (`x2src 4`, then `x2 0`) also had no effect; it drives an *external* switch via contact X2. `xswitchphase` is not in the KEBA guides. |
 | Unlock cable | ⚠️ no effect during a session | Replies `TCH-OK`, but with a session running the cable stayed locked (`Plug` 7) and charging continued. Not tested while idle. |
 
 Entities marked ⚠️ may change or be removed once their behaviour is confirmed.
