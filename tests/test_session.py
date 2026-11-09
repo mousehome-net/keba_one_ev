@@ -48,5 +48,22 @@ class TestSessionDurationS(unittest.TestCase):
         self.assertEqual(self.session.session_duration_s(started=1050, ended=0, now=1000), 0)
 
 
+class TestSessionStartDatetime(unittest.TestCase):
+    def setUp(self):
+        self.session = load_session_module()
+
+    def test_no_session_means_no_start(self):
+        self.assertIsNone(self.session.session_start_datetime(0))
+
+    def test_epoch_is_converted_to_utc(self):
+        # Real report 100 of the maintainer's charger:
+        # "started[s]": 1794220448, "started": "2026-11-09 10:34:08.797Z"
+        from datetime import datetime, timezone
+        self.assertEqual(
+            self.session.session_start_datetime(1794220448),
+            datetime(2026, 11, 9, 10, 34, 8, tzinfo=timezone.utc),
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -181,6 +181,8 @@ class KebaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
             # ── report 100: OCPP session data ─────────────────────────
             "session_id":       r100.get("Session ID", 0) if r100 else 0,
+            # Unix epoch of the session start, kept over a missed report 100
+            "session_started_s": r100.get("started[s]", 0) if r100 else previous.get("session_started_s", 0),
             "session_started":  r100.get("started", "") if r100 else "",   # ISO timestamp
             "session_ended":    r100.get("ended", "") if r100 else "",
             # started[s]/ended[s] are Unix epoch timestamps, not elapsed

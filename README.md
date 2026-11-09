@@ -22,8 +22,10 @@ Communicates directly via the **KEBA UDP protocol** on the local network — no 
 | Sensor | Voltage L1 / L2 / L3 (V) | ☑ disabled |
 | Sensor | Power Factor (%) | ☑ disabled |
 | Sensor | Current Limit Hardware / Failsafe (A) | ☑ disabled |
+| Sensor | Current Limit Effective (A) — what the charger actually offers the vehicle | ☑ disabled |
 | Sensor | Plug Status | ☑ disabled |
 | Sensor | Session Duration (s) | ☑ disabled |
+| Sensor | Session Start (timestamp) | ☑ disabled |
 | Sensor | RFID Tag | ☑ disabled |
 | Sensor | Firmware | ☑ disabled |
 | Sensor | Error Code 1 / 2 | ☑ disabled |
@@ -57,6 +59,38 @@ current also by a user on FW 04.00.42:
 | Unlock cable | ⚠️ no effect during a session | Replies `TCH-OK`, but with a session running the cable stayed locked (`Plug` 7) and charging continued. Not tested while idle. |
 
 Entities marked ⚠️ may change or be removed once their behaviour is confirmed.
+
+### Automation tips
+
+**Charging current from a target power.** The integration sets the current in
+ampere. For a car that charges on three phases at about 230 V, the current for a
+target power is `P / (3 × 230 V)`. Clamp it to the supported range of 6–16 A:
+
+```yaml
+{{ [ [ (target_kw * 1000 / (3 * 230)) | round(0), 6 ] | max, 16 ] | min }}
+```
+
+Use `1` instead of `3` for a car that charges on one phase. The charger does not
+tell how many phases the car uses, so this is not done for you. On the
+maintainer's unit (3 phases) 14.7 A gave 9.9 kW and 9.95 A gave 6.7 kW, about
+0.67 kW per ampere. Things to know:
+
+- 6 A is the lowest value (about 4 kW on three phases). The current can't be
+  lowered further or paused (see above), so a smaller surplus is drawn from the
+  battery or the grid.
+- A change is applied after a few seconds (KEBA documents 6–7 s, about 3 s were
+  measured). Adjust no faster than every 30 s and use some hysteresis.
+- A `curr` value stays until the charger is rebooted, no periodic re-sending is
+  needed (held for over 230 s without any command on FW 04.00.70).
+
+**Session duration as hours:minutes:seconds** (for example in a Mushroom template
+card; it updates with every poll, so about every 10 s):
+
+```yaml
+{% set s = states('sensor.<device>_session_duration') | int(0) %}
+{{ '%02d:%02d:%02d' % (s // 3600, s % 3600 // 60, s % 60) }}
+```
+
 
 ---
 

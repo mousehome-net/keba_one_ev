@@ -16,9 +16,10 @@ Sensors are split into two groups:
     - power_factor               power factor in %
     - current_limit_hw           fixed hardware maximum in A
     - current_limit_failsafe     current when backend connection is lost
-    - current_limit_pct          user limit as percentage
+    - current_limit_effective    current the charger actually offers the vehicle (A)
     - plug                       plug connected / disconnected (translated)
     - session_duration           session duration in seconds
+    - session_started            start of the current/last session
     - rfid_tag                   RFID card ID used to authorise the session
     - firmware                   charger firmware version
     - error1 / error2            error codes (0 = no error)
@@ -52,6 +53,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, KEBA_STATE_CODES
 from .coordinator import KebaCoordinator
 from .plug import is_vehicle_connected
+from .session import session_start_datetime
 
 
 @dataclass(frozen=True)
@@ -212,13 +214,15 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
         enabled_default=False,
     ),
     KebaSensorDescription(
-        key="current_limit_pct",
-        translation_key="current_limit_pct",
+        key="current_limit_effective",
+        translation_key="current_limit_effective",
+        device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:percent",
-        data_key="max_curr_pct",
-        value_fn=lambda d: round(d.get("max_curr_pct", 1000) / 10, 1),  # 0-1000 → 0-100 %
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        data_key="max_curr_ma",
+        # What the vehicle is allowed to draw: the minimum of the user limit,
+        # the hardware limit and any other limit; 0 when not charging.
+        value_fn=lambda d: round(d.get("max_curr_ma", 0) / 1000, 1),
         enabled_default=False,
     ),
     KebaSensorDescription(
@@ -258,6 +262,15 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
         native_unit_of_measurement="s",
         data_key="session_duration_s",
         value_fn=lambda d: d.get("session_duration_s", 0),
+        enabled_default=False,
+    ),
+    KebaSensorDescription(
+        key="session_started",
+        translation_key="session_started",
+        icon="mdi:clock-start",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        data_key="session_started_s",
+        value_fn=lambda d: session_start_datetime(d.get("session_started_s", 0)),
         enabled_default=False,
     ),
     KebaSensorDescription(

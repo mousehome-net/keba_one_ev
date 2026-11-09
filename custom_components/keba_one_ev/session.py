@@ -9,6 +9,8 @@ read directly off either field.
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 
 def session_duration_s(started: int, ended: int, now: float) -> int:
     """Seconds elapsed in the current/last charging session.
@@ -21,3 +23,14 @@ def session_duration_s(started: int, ended: int, now: float) -> int:
         return 0
     end = ended if ended else now
     return max(0, int(end - started))
+
+
+def session_start_datetime(started: int) -> datetime | None:
+    """Start of the current/last session as an aware UTC datetime.
+
+    `started[s]` is a Unix epoch timestamp (see above). None if no session has
+    started yet.
+    """
+    if not started:
+        return None
+    return datetime.fromtimestamp(started, tz=timezone.utc)

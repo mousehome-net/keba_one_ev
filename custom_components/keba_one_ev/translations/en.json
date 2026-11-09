@@ -48,7 +48,7 @@
       "voltage_l2": { "name": "Voltage L2" },
       "voltage_l3": { "name": "Voltage L3" },
       "power_factor": { "name": "Power Factor" },
-      "current_limit_pct": { "name": "Current Limit (Percent)" },
+      "current_limit_effective": { "name": "Current Limit (Effective)" },
       "current_limit_hw": { "name": "Current Limit (Hardware)" },
       "current_limit_failsafe": { "name": "Current Limit (Failsafe)" },
       "plug": {
@@ -59,6 +59,7 @@
         }
       },
       "session_duration": { "name": "Session Duration" },
+      "session_started": { "name": "Session Start" },
       "rfid_tag": { "name": "RFID Tag" },
       "firmware": { "name": "Firmware" },
       "error1": { "name": "Error Code 1" },
