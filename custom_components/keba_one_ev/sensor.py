@@ -52,6 +52,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, KEBA_STATE_CODES
 from .coordinator import KebaCoordinator
+from .phase import PHASE_OPTIONS, phase_mode
 from .plug import is_vehicle_connected
 from .session import session_start_datetime
 
@@ -253,6 +254,18 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
         data_key="plug",
         value_fn=lambda d: "connected" if is_vehicle_connected(d.get("plug")) else "disconnected",
         enabled_default=False,
+    ),
+    KebaSensorDescription(
+        key="phase_mode",
+        translation_key="phase_mode",
+        device_class=SensorDeviceClass.ENUM,
+        icon="mdi:sine-wave",
+        options=PHASE_OPTIONS,
+        data_key="phase_switch",
+        # Read-only: follows the setting made in the SolarEdge app, unknown
+        # when the charger reports no phase switch (e.g. 0 on single-phase units)
+        value_fn=lambda d: phase_mode(d.get("phase_switch")),
+        enabled_default=True,
     ),
     KebaSensorDescription(
         key="session_duration",

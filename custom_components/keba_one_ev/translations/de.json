@@ -52,6 +52,13 @@
           "disconnected": "Getrennt"
         }
       },
+      "phase_mode": {
+        "name": "Phasenmodus",
+        "state": {
+          "1_phase": "1-phasig",
+          "3_phase": "3-phasig"
+        }
+      },
       "session_duration": { "name": "Session-Dauer" },
       "session_started": { "name": "Session-Beginn" },
       "rfid_tag": { "name": "RFID Tag" },
@@ -67,15 +74,6 @@
     },
     "number": {
       "charging_current": { "name": "Ladestrom" }
-    },
-    "select": {
-      "phase_mode": {
-        "name": "Phasenmodus",
-        "state": {
-          "1_phase": "1-phasig",
-          "3_phase": "3-phasig"
-        }
-      }
     },
     "button": {
       "unlock_cable": { "name": "Kabel entsperren" }

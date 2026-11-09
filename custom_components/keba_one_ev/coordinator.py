@@ -2,7 +2,7 @@
 
 The coordinator is the single point of contact with the physical charger.
 It runs a timed polling loop (default: every 10 s) and fetches all four KEBA
-UDP reports in one go. All entity platforms (binary_sensor, sensor, number, select, button)
+UDP reports in one go. All entity platforms (binary_sensor, sensor, number, button)
 subscribe to the coordinator instead of opening their own sockets.
 
 KEBA UDP protocol summary
@@ -86,7 +86,7 @@ class KebaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def send_command(self, command: str) -> bool:
         """Send a fire-and-forget control command to the charger.
 
-        Used by the number/select/button entities to change charger state.
+        Used by the number and button entities to change charger state.
         The charger acknowledges most commands with a small JSON response;
         we only check whether a response arrived, not its content.
 

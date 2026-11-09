@@ -52,6 +52,13 @@
           "disconnected": "Disconnected"
         }
       },
+      "phase_mode": {
+        "name": "Phase Mode",
+        "state": {
+          "1_phase": "1-Phase",
+          "3_phase": "3-Phase"
+        }
+      },
       "session_duration": { "name": "Session Duration" },
       "session_started": { "name": "Session Start" },
       "rfid_tag": { "name": "RFID Tag" },
@@ -67,15 +74,6 @@
     },
     "number": {
       "charging_current": { "name": "Charging Current" }
-    },
-    "select": {
-      "phase_mode": {
-        "name": "Phase Mode",
-        "state": {
-          "1_phase": "1-Phase",
-          "3_phase": "3-Phase"
-        }
-      }
     },
     "button": {
       "unlock_cable": { "name": "Unlock Cable" }

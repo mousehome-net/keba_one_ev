@@ -14,6 +14,7 @@ Communicates directly via the **KEBA UDP protocol** on the local network — no 
 | Binary Sensor | Backend Connected — OCPP/backend link active (e.g. SolarEdge app/cloud) | ☑ disabled |
 | Binary Sensor | COM Module Present | ☑ disabled |
 | Sensor | Charging State | ✅ enabled |
+| Sensor | Phase Mode (1-phase / 3-phase, read-only, follows the SolarEdge app; *unknown* on units without a phase switch) | ✅ enabled |
 | Sensor | Charging Power (W) | ✅ enabled |
 | Sensor | Session Energy (Wh) | ✅ enabled |
 | Sensor | Total Energy (kWh) | ✅ enabled |
@@ -30,7 +31,6 @@ Communicates directly via the **KEBA UDP protocol** on the local network — no 
 | Sensor | Firmware | ☑ disabled |
 | Sensor | Error Code 1 / 2 | ☑ disabled |
 | Number | Charging Current (6–16 A slider) | ✅ enabled |
-| Select | Phase Mode (1-phase / 3-phase) (⚠️ unverified, see below; shows *unknown* on units without a phase switch) | ✅ enabled |
 | Button | Unlock Cable | ✅ enabled |
 
 Entities keep their last value over one or two failed polls in a row (for example on a
@@ -55,7 +55,7 @@ current also by a user on FW 04.00.42:
 | Set charging current (6–16 A) | ✅ value stays, and in an active session the real current follows it | This is the control that works reliably, for example for PV surplus charging. |
 | Pause charging with `curr 0` | ❌ does not pause an active session | Accepted without a car (`Curr user` becomes 0). In an active session the current dropped to ~0 A for about 3–10 s and then returned to full without any command, `Curr user` stayed unchanged (FW 04.00.70 and, in #12, FW 04.00.42). |
 | Start / stop a session | ❌ not possible through this interface | `ena`, `curr 0`, `currtime 0 1` and the energy target (`setenergy`) were all tested and do not stop a session. The energy target only interrupts charging for 4–7 s (#12, FW 04.00.42). Stop it from the car or its app. |
-| Phase mode (`xswitchphase`) | ❌ no effect | Empty reply; in an active session on FW 04.00.70 the phases and `X2 phaseSwitch` stayed unchanged for over a minute. The phase switch documented by KEBA (`x2src 4`, then `x2 0`) also had no effect; it drives an *external* switch via contact X2. `xswitchphase` is not in the KEBA guides. |
+| Change the phase mode | ❌ not possible over UDP | Reading works: the *Phase Mode* sensor follows the setting made in the SolarEdge app (it changed from 3 to 1 phase within a minute). Setting it over UDP has no effect, neither with `xswitchphase` (not in the KEBA guides) nor with the documented `x2src 4` and `x2 0|1` (they drive an *external* switch via contact X2), in a session or when idle. The SolarEdge app switches through the cloud back office. |
 | Unlock cable | ⚠️ no effect during a session | Replies `TCH-OK`, but with a session running the cable stayed locked (`Plug` 7) and charging continued. Not tested while idle. |
 
 Entities marked ⚠️ may change or be removed once their behaviour is confirmed.
@@ -70,8 +70,10 @@ target power is `P / (3 × 230 V)`. Clamp it to the supported range of 6–16 A:
 {{ [ [ (target_kw * 1000 / (3 * 230)) | round(0), 6 ] | max, 16 ] | min }}
 ```
 
-Use `1` instead of `3` for a car that charges on one phase. The charger does not
-tell how many phases the car uses, so this is not done for you. On the
+Use `1` instead of `3` for a car that charges on one phase. The *Phase Mode*
+sensor (`1_phase` / `3_phase`) tells the number of phases the charger is set to,
+so a template can pick the factor from it. It does not tell how many phases the
+car actually uses, so this is not done for you. On the
 maintainer's unit (3 phases) 14.7 A gave 9.9 kW and 9.95 A gave 6.7 kW, about
 0.67 kW per ampere. Things to know:
 
@@ -275,6 +277,28 @@ The integration ships with English (`en`) and German (`de`). To add a new langua
 3. Open a pull request. No code changes required.
 
 ---
+
+## Alternative: your own OCPP server
+
+The charger talks to its back office over OCPP (on the maintainer's unit to the
+SolarEdge subsidiary Wevo Energy, see [docs/hardware-tests.md](docs/hardware-tests.md)).
+That is how the SolarEdge app reaches it, and it offers more than the local UDP
+interface can: UDP can neither pause a session nor switch the phases here.
+
+If the *Backoffice* setting of your charger can be changed to **Other
+Backoffice** in the SolarEdge app, you can point it to an OCPP server of your own,
+for example the community integration [ocpp](https://github.com/lbbrhzn/ocpp) for
+Home Assistant. One user reported (#12) that a current limit set this way was
+accepted and the power followed it. Be aware of the trade-offs:
+
+- The SolarEdge guide says the Backoffice can only be reconfigured on C&I
+  installations, so on a residential setup the option may not be available.
+- The charger has one back office connection. With your own server the SolarEdge
+  cloud, the app control and its excess-PV charging no longer reach the charger.
+- This integration keeps working next to it for reading values over UDP, but the
+  UDP commands it sends are limited as described above.
+
+This is only a pointer, it has not been tested by the maintainer.
 
 ## Related Integrations
 
