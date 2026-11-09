@@ -154,6 +154,8 @@ Details and sources are in the next section.
 
 ### Which write commands actually work
 
+The raw test data and the method are in [docs/hardware-tests.md](docs/hardware-tests.md).
+
 Write support depends on the firmware. What has been observed so far (read-only
 access always works):
 
