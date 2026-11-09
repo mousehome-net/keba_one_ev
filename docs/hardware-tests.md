@@ -61,6 +61,13 @@ SolarEdge ONE EV Charger, product `ONE_EV`, firmware `04.00.70`,
   `Curr HW` above 16000, and states in which `Curr HW` reads 0 (the guide allows
   0).
 
+- **A `curr` setting is not reset by the failsafe function.** The reports show
+  `Tmo FS` 119 and `Curr FS` 16000, which would drop the current back to 16 A
+  after about two minutes without a command if the failsafe were active. `curr
+  10000` was sent once and held for 230 s without any further command:
+  `Curr user` and `Max curr` stayed 10000, `Enable sys` stayed 1, the phase current
+  stayed at about 9.9 A. So no periodic re-sending is needed on this unit.
+
 ## Community results
 
 | Source | Unit | Result |
@@ -87,6 +94,13 @@ SolarEdge ONE EV Charger, product `ONE_EV`, firmware `04.00.70`,
 
 ## Not tested yet
 
+- The phase switch as documented by KEBA: `x2src 4` (toggle source = UDP), then
+  `x2 0` (1 phase) / `x2 1` (3 phases), with a cool-down of 5 minutes between
+  switches. `xswitchphase`, which the integration uses, is not in either KEBA
+  guide. Changing `x2src` may take over phase control from the SolarEdge back
+  office, so it needs care.
+- `unlock` right after a stop, as the guide requires ("the charging process has to
+  be stopped first, e.g. via `currtime 0 1` or `ena 0`").
 - `unlock` while the vehicle is connected but not charging (`State 2`): does
   `Plug` change from 7 to 5?
 - `xswitchphase` on other firmware versions, in a session.
@@ -117,6 +131,19 @@ not in this repository):
   (IEC 61851-1 requires a minimum time between changes), and a second request in
   that window overwrites the target without restarting the timer. About 3 s were
   measured here.
+- `unlock` only works after charging has been stopped (e.g. `currtime 0 1` or
+  `ena 0`), so the result with a running session is expected.
+- The documented phase switch is `x2src <0-4>` (4 = toggle via UDP) followed by
+  `x2 0|1`, with a 5 minute cool-down between switches. `xswitchphase` appears in
+  neither the UDP nor the Modbus TCP guide.
+- `ena` and `curr` are listed as commands "with permanent effects" that should
+  not be used regularly, as they change the behaviour until overwritten or the
+  device is rebooted. The failsafe function (`failsafe <t> <c> <s>`) drops the
+  current to `c` if no `curr`, `currtime` or `ena` arrives within `t` seconds. It
+  is off by default.
+- `setenergy` is described as a limit that stops the session and deactivates the
+  device like `ena 0` once reached, and as non-permanent. That is not what the
+  SolarEdge firmware does (charging resumes after 4–7 s, #12).
 - `Curr HW` is "the minimum of the DIP switch settings, cable coding and
   temperature monitoring" and ranges from 6000 to 32000 mA, which is the right
   source for the upper limit of a current setting (see #3).
