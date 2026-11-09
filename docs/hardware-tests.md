@@ -119,6 +119,23 @@ refresh can send `report 1` without a gap. Tested with read commands only:
 with 150 ms, 6 s between rounds. All 60 requests were answered, so on this unit a
 missing gap did not cause dropped replies.
 
+### 2026-11-09, session history and other read commands
+
+- `i` returns `{"Firmware":"04.00.70"}`.
+- `report 101`, `report 102`: the last finished sessions, with `Session ID`,
+  `E Pres` (energy of that session), `started[s]` / `ended[s]` (Unix epoch on this
+  firmware), `started` / `ended` as UTC strings and `reason` (`1` = ended by
+  unplugging). Example: session 4 from 10:34:08 to 11:51:42 UTC, 10.38 kWh.
+  `report 130` returned an empty reply (no entry).
+- After unplugging, `report 100` already shows the next, empty session
+  (`started[s]` 0) while `E Pres` keeps the last session's value.
+- Note: KEBA's guide defines `started[s]` / `ended[s]` as seconds since the last
+  restart of the charger, not as Unix time. On this firmware they are Unix time;
+  a genuine P30 may follow the guide. Not checked on a P30 yet.
+- Not tested: the status messages of chapter 4.4 (the charger pushes changes of
+  `State`, `Plug`, `Enable sys`, `Max curr`, `E pres` to the address of the last
+  command). This needs a vehicle to trigger changes.
+
 ## Community results
 
 | Source | Unit | Result |
