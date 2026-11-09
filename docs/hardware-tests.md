@@ -94,6 +94,21 @@ the switch (the guide requires 5 minutes between switches):** empty reply,
 `X2 phaseSwitch` stayed 1 for 60 s. So the documented UDP phase switch does not
 work on this firmware, neither in a session nor when idle.
 
+### 2026-11-09, which commands does the firmware know?
+
+Made-up commands (`foobar`, `zzz 1`, `report 99`) get an **immediate empty reply**
+(0.00 s), while recognised commands answer `TCH-OK: done` or JSON. By that pattern,
+on FW 04.00.70:
+
+- recognised: `curr`, `currtime`, `setenergy`, `unlock`, `report 1/2/3/100`
+  (`currtime`, `setenergy` and `unlock` are recognised but do not behave as KEBA
+  documents, see above);
+- answered like an unknown command: `ena`, `x2src`, `x2`, `xswitchphase`.
+
+This is an inference from the reply pattern, not a confirmed list. Probing further
+names this way is possible but risky: a recognised command is executed at once,
+with unknown effects.
+
 ## Community results
 
 | Source | Unit | Result |
