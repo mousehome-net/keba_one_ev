@@ -44,6 +44,7 @@ SolarEdge ONE EV Charger, product `ONE_EV`, firmware `04.00.70`,
 | `curr 0` | `TCH-OK`. After 2 s about 0.05 A and `State 2`. From about 12 s charging started again by itself (`State 3`), full 14.75 A at 20 s, before any command from us. `Curr user` stayed 16000 throughout. Without a vehicle the same command had set `Curr user` to 0. |
 | `xswitchphase 1` | Empty reply. All three phases stayed at about 14.7 A and `X2 phaseSwitch` stayed 3 for about 70 s (samples every 4–8 s). The session was not interrupted. |
 | `unlock` | `TCH-OK`. `Plug` stayed 7 (cable locked) and charging continued for 25 s. |
+| `currtime 12000 10` | `TCH-OK`, but nothing happened: `Curr timer` stayed 16000, `Tmo CT` stayed 0, `Curr user`, `Max curr` and the current stayed unchanged for 45 s (samples every ~5 s). According to the KEBA guide `Curr user` should have become 12000 after 10 s. |
 
 ## Community results
 
@@ -58,7 +59,7 @@ SolarEdge ONE EV Charger, product `ONE_EV`, firmware `04.00.70`,
 - `curr` (6000–16000 mA) is the only control that works reliably, also in a
   session.
 - No tested command stops a session for good: `ena` is ignored, `curr 0` and
-  `currtime 0 <s>` only pause for a few seconds, `setenergy` below the
+  `currtime 0 1` only pauses for a few seconds (#12), `setenergy` below the
   delivered energy only interrupts for 4–7 s.
 - `xswitchphase` had no effect on FW 04.00.70 in a session. One report from
   FW 04.00.42 (#12) says it was accepted and reset within seconds, which has not
@@ -74,15 +75,32 @@ SolarEdge ONE EV Charger, product `ONE_EV`, firmware `04.00.70`,
 
 ## Background from the KEBA documentation
 
-Taken from the KEBA UDP Programmers Guide V2.01 as quoted in search results;
-the full text of these sections was not read, so treat the details as
-unverified:
+From the KEBA KeContact P30 UDP Programmers Guide V 2.05 (full text kept locally,
+not in this repository):
 
-- `Curr user` accepts `0` or `6000`–`63000` mA, which matches the 6 A lower
-  limit seen in the tests (`curr 3000` is ignored).
-- The guide recommends `currtime` over `curr` for adjusting the current, since
-  `curr` overwrites `Curr user` directly. The reasoning was cut off in the source
-  and may concern more than storage; check it before building an automation that
-  writes `curr` often.
-- Current changes during a session are applied with a delay of a few seconds
-  (3 s were measured here).
+- `curr <mA>` and `currtime <mA> <s>` accept `0` or `6000`–`63000` mA, which
+  matches the 6 A lower limit seen here (`curr 3000` is ignored). `Max curr`, the
+  value offered to the vehicle, is limited to `0` or `6000`–`32000` mA. The guide
+  ties this to the control pilot signal of IEC 61851-1: the charger only
+  communicates a maximum allowed current, the vehicle controls the actual one.
+- `currtime [c] [t]` sets the current `c` after a delay of `t` seconds (`t` is a
+  delay, not a duration). The change is not permanent and is reset when the plug
+  is pulled. `currtime 0 1` is described as a charging stop similar to `ena 0`
+  that lasts until a new `currtime` overwrites it. This is **not** what was
+  observed on the SolarEdge ONE firmware: `currtime 12000 10` had no effect at all
+  here, and `currtime 0 1` only paused for a few seconds in #12.
+- `curr` changes `Curr user` immediately and is "permanent until the device is
+  rebooted". The guide advises against it because such a setting can only be
+  removed by a reboot or by overwriting it with `currtime`. The guide does not
+  mention flash wear. Since `currtime` does not work on this firmware, `curr` is
+  the only usable way to set the current.
+- A current change during a session is executed after a delay of 6–7 seconds
+  (IEC 61851-1 requires a minimum time between changes), and a second request in
+  that window overwrites the target without restarting the timer. About 3 s were
+  measured here.
+- `Curr HW` is "the minimum of the DIP switch settings, cable coding and
+  temperature monitoring" and ranges from 6000 to 32000 mA, which is the right
+  source for the upper limit of a current setting (see #3).
+- `Max curr %` is the duty cycle of the control pilot signal in units of 0.1 %
+  (`266` = 26.6 %, which corresponds to 16 A), not a percentage of the current
+  limit.
