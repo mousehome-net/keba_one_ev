@@ -17,6 +17,8 @@ DOMAIN = "keba_one_ev"
 DEFAULT_HOST = "192.168.1.76"
 DEFAULT_PORT = 7090          # KEBA UDP port, fixed by the hardware
 DEFAULT_SCAN_INTERVAL = 10   # seconds between polls
+# KEBA requires at least 5 s between repetitions of the same command (t_COM_pause)
+MIN_SCAN_INTERVAL = 5
 
 # Config entry keys (stored in entry.data)
 CONF_HOST = "host"
@@ -43,6 +45,6 @@ KEBA_PHASE_MODES = {
 }
 
 # Hardware limits for charging current (in mA)
-# KEBA requires a minimum of 6 A; 0 A means stop charging via curr command
+# KEBA requires a minimum of 6 A (0 or 6000-63000 mA are accepted). The upper
+# limit comes from the charger's Curr HW, see limits.py.
 KEBA_MIN_CURRENT_MA = 6000
-KEBA_MAX_CURRENT_MA = 16000

@@ -142,7 +142,12 @@ missing gap did not cause dropped replies.
 |--------|------|--------|
 | [#12](https://github.com/mousehome-net/keba_one_ev/issues/12) | SolarEdge ONE EV (EV Pro), FW 04.00.42, back office attached | `curr 10000` held in all states (no car, car without session, active session at 10.6 kW); current fell from about 15 A to about 9.5 A and came back after restoring. `ena 0` / `ena 1`: no reply (resp. empty reply), no effect. `currtime 0 1`: `TCH-OK`, current fell to about 0.1–0.8 A and was back at about 15 A after 6 s with no further command. `curr 0` in a session: dipped to about 0.6 A, full again after about 6 s, `Curr user` stayed 16000. `setenergy 4508` (below the 9017 already delivered): `State 5`, then `State 2`, charging resumed after 4–7 s, `Setenergy` stayed 4508. |
 | [#10](https://github.com/mousehome-net/keba_one_ev/issues/10) | ONE_EV, FW 04.00.70 | `curr 10000` accepted, `Curr user` 10000. In a session `curr` between 6 and 16 A changed the current; `curr 0`, `ena`, `setenergy` and `xswitchphase` showed no visible effect, possibly masked by the car's own cloud control (retest announced). |
-| [#5](https://github.com/mousehome-net/keba_one_ev/issues/5) | `KC-P30-EC2404B2-E00-SL`, FW P30 v3.10.53, single-phase | Setup works. `report 1`, `2`, `3` and `100` answer; 30 of 30 back-to-back requests succeeded. `X2 phaseSwitch` is 0 (no phase switch). |
+| [#3](https://github.com/mousehome-net/keba_one_ev/issues/3) | unit with SolarEdge-style reports (`X2 phaseSwitch` field), no vehicle yet | `report 2`: `Curr HW` 32000 (hardware limit 32 A), `Curr user` 16000, `X2 phaseSwitch` 1. Confirms that `Curr HW` above 16000 exists. |
+| [#5](https://github.com/mousehome-net/keba_one_ev/issues/5) | `KC-P30-EC2404B2-E00-SL`, FW P30 v3.10.53, single-phase | Setup works (confirmed again on v1.8.0). Voltages read 0 V on all phases, also in `report 3` without a vehicle; whether the P30 only measures during a session is not confirmed. `report 1`, `2`, `3` and `100` answer; 30 of 30 back-to-back requests succeeded. `X2 phaseSwitch` is 0 (no phase switch). |
+
+Further from #5 (vaci, KEBA P30 web interface): DSW1.3 ON is labelled "Smart
+Home Interface is enabled" and is needed for UDP; Modbus TCP has its own software
+switch ("Modbus TCP State") in the web interface.
 
 ## Conclusions so far
 

@@ -19,7 +19,8 @@ Sensors are split into two groups:
     - current_limit_effective    current the charger actually offers the vehicle (A)
     - plug                       plug connected / disconnected (translated)
     - session_duration           session duration in seconds
-    - session_started            start of the current/last session
+    - session_started            start of the current session
+    - last_session_*             energy, start, end, duration of the last finished session
     - rfid_tag                   RFID card ID used to authorise the session
     - firmware                   charger firmware version
     - error1 / error2            error codes (0 = no error)
@@ -283,7 +284,46 @@ SENSORS: tuple[KebaSensorDescription, ...] = (
         icon="mdi:clock-start",
         device_class=SensorDeviceClass.TIMESTAMP,
         data_key="session_started_s",
-        value_fn=lambda d: session_start_datetime(d.get("session_started_s", 0)),
+        value_fn=lambda d: session_start_datetime(
+            d.get("session_started_s", 0), d.get("session_started")
+        ),
+        enabled_default=False,
+    ),
+    KebaSensorDescription(
+        key="last_session_energy",
+        translation_key="last_session_energy",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        data_key="last_session",
+        value_fn=lambda d: (d.get("last_session") or {}).get("energy_kwh"),
+        enabled_default=False,
+    ),
+    KebaSensorDescription(
+        key="last_session_start",
+        translation_key="last_session_start",
+        icon="mdi:clock-start",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        data_key="last_session",
+        value_fn=lambda d: (d.get("last_session") or {}).get("started"),
+        enabled_default=False,
+    ),
+    KebaSensorDescription(
+        key="last_session_end",
+        translation_key="last_session_end",
+        icon="mdi:clock-end",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        data_key="last_session",
+        value_fn=lambda d: (d.get("last_session") or {}).get("ended"),
+        enabled_default=False,
+    ),
+    KebaSensorDescription(
+        key="last_session_duration",
+        translation_key="last_session_duration",
+        icon="mdi:timer-check-outline",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement="s",
+        data_key="last_session",
+        value_fn=lambda d: (d.get("last_session") or {}).get("duration_s"),
         enabled_default=False,
     ),
     KebaSensorDescription(

@@ -36,7 +36,7 @@ class TestSendCommandBinding(unittest.TestCase):
 
     def test_binds_to_charger_port_before_sending(self):
         mock_sock = MagicMock()
-        mock_sock.recvfrom.return_value = (b'{"Product": "ONE_EV"}', ("10.0.0.5", 7090))
+        mock_sock.recvfrom.return_value = (b'{"ID": 1, "Product": "ONE_EV"}', ("10.0.0.5", 7090))
 
         with patch.object(self.udp.socket, "socket", return_value=mock_sock) as mock_socket_cls:
             result = self.udp.send_command("10.0.0.5", 7090, "report 1")
@@ -55,7 +55,7 @@ class TestSendCommandBinding(unittest.TestCase):
         )
         self.assertLess(bind_call_index, sendto_call_index)
 
-        self.assertEqual(result, {"Product": "ONE_EV"})
+        self.assertEqual(result, {"ID": 1, "Product": "ONE_EV"})
         mock_sock.close.assert_called_once()
 
     def test_returns_none_on_timeout(self):
@@ -122,6 +122,66 @@ class TestSendCommandBinding(unittest.TestCase):
         self.assertIsNone(result)
 
 
+class TestReplyMatching(unittest.TestCase):
+    """Only the reply to the requested report counts: the charger can push
+    status messages (KEBA guide 4.4) and late replies can arrive."""
+
+    def setUp(self):
+        self.udp = load_udp_module()
+
+    def _send(self, command, datagrams):
+        mock_sock = MagicMock()
+        mock_sock.recvfrom.side_effect = [(d, ("10.0.0.5", 7090)) for d in datagrams] + [socket.timeout]
+        with patch.object(self.udp.socket, "socket", return_value=mock_sock):
+            return self.udp.send_command("10.0.0.5", 7090, command, timeout=0.5)
+
+    def test_reply_with_other_report_id_is_skipped(self):
+        result = self._send("report 2", [b'{"ID":3,"P":1}', b'{"ID":2,"State":3}'])
+        self.assertEqual(result, {"ID": 2, "State": 3})
+
+    def test_status_push_without_id_is_skipped(self):
+        result = self._send("report 2", [b'{"State":3}', b'{"ID":2,"State":3}'])
+        self.assertEqual(result, {"ID": 2, "State": 3})
+
+    def test_string_id_is_accepted(self):
+        # A genuine P30 (#5) sends "ID": "1"
+        result = self._send("report 1", [b'{"ID":"1","Product":"KC-P30"}'])
+        self.assertEqual(result["Product"], "KC-P30")
+
+    def test_only_wrong_replies_means_none(self):
+        self.assertIsNone(self._send("report 2", [b'{"ID":3}']))
+
+    def test_status_push_before_control_ack_is_skipped(self):
+        self.assertEqual(self._send("curr 10000", [b'{"Max curr":10000}', b"TCH-OK: done"]), {})
+
+
+class TestMinimumGap(unittest.TestCase):
+    """KEBA requires at least 100 ms between any two commands (t_UDP_pause)."""
+
+    def test_waits_for_the_remaining_gap(self):
+        udp = load_udp_module()
+        mock_sock = MagicMock()
+        mock_sock.recvfrom.return_value = (b"TCH-OK: done", ("10.0.0.5", 7090))
+        udp._last_exchange_end = 100.0
+        with patch.object(udp.socket, "socket", return_value=mock_sock), \
+             patch.object(udp.time, "monotonic", return_value=100.03), \
+             patch.object(udp.time, "sleep") as fake_sleep:
+            udp.send_command("10.0.0.5", 7090, "curr 10000")
+        fake_sleep.assert_called_once()
+        self.assertAlmostEqual(fake_sleep.call_args[0][0], 0.07, places=3)
+
+    def test_no_wait_when_the_gap_has_passed(self):
+        udp = load_udp_module()
+        mock_sock = MagicMock()
+        mock_sock.recvfrom.return_value = (b"TCH-OK: done", ("10.0.0.5", 7090))
+        udp._last_exchange_end = 100.0
+        with patch.object(udp.socket, "socket", return_value=mock_sock), \
+             patch.object(udp.time, "monotonic", return_value=101.0), \
+             patch.object(udp.time, "sleep") as fake_sleep:
+            udp.send_command("10.0.0.5", 7090, "curr 10000")
+        fake_sleep.assert_not_called()
+
+
 class TestSendCommandSerialization(unittest.TestCase):
     """Only one exchange may be in flight at a time: port 7090 is a single
     shared local resource, even across multiple charger coordinators."""
@@ -142,7 +202,12 @@ class TestSendCommandSerialization(unittest.TestCase):
 
         def make_socket(*args, **kwargs):
             s = MagicMock()
-            s.recvfrom.return_value = (b'{"ok": true}', ("10.0.0.5", 7090))
+            def reply(*_args):
+                cmd = s.sendto.call_args[0][0].decode()
+                body = b'{"ID": 2}' if cmd == "report 2" else b"TCH-OK: done"
+                return (body, ("10.0.0.5", 7090))
+
+            s.recvfrom.side_effect = reply
             s.bind.side_effect = tracking_bind
             mock_sock_factory_calls.append(s)
             return s

@@ -27,10 +27,11 @@ Communicates directly via the **KEBA UDP protocol** on the local network — no 
 | Sensor | Plug Status | ☑ disabled |
 | Sensor | Session Duration (s) | ☑ disabled |
 | Sensor | Session Start (timestamp) | ☑ disabled |
+| Sensor | Last Session Energy (kWh) / Start / End / Duration — the last finished session | ☑ disabled |
 | Sensor | RFID Tag | ☑ disabled |
 | Sensor | Firmware | ☑ disabled |
 | Sensor | Error Code 1 / 2 | ☑ disabled |
-| Number | Charging Current (6–16 A slider) | ✅ enabled |
+| Number | Charging Current (slider from 6 A up to the hardware limit the charger reports, e.g. 16 or 32 A) | ✅ enabled |
 | Button | Unlock Cable | ✅ enabled |
 
 Entities keep their last value over one or two failed polls in a row (for example on a
@@ -52,7 +53,7 @@ current also by a user on FW 04.00.42:
 
 | Action | Verified | Notes |
 |--------|----------|-------|
-| Set charging current (6–16 A) | ✅ value stays, and in an active session the real current follows it | This is the control that works reliably, for example for PV surplus charging. |
+| Set charging current (6 A up to the hardware limit) | ✅ value stays, and in an active session the real current follows it | This is the control that works reliably, for example for PV surplus charging. |
 | Pause charging with `curr 0` | ❌ does not pause an active session | Accepted without a car (`Curr user` becomes 0). In an active session the current dropped to ~0 A for about 3–10 s and then returned to full without any command, `Curr user` stayed unchanged (FW 04.00.70 and, in #12, FW 04.00.42). |
 | Start / stop a session | ❌ not possible through this interface | `ena`, `curr 0`, `currtime 0 1` and the energy target (`setenergy`) were all tested and do not stop a session. The energy target only interrupts charging for 4–7 s (#12, FW 04.00.42). Stop it from the car or its app. |
 | Change the phase mode | ❌ not possible over UDP | Reading works: the *Phase Mode* sensor follows the setting made in the SolarEdge app (it changed from 3 to 1 phase within a minute). Setting it over UDP has no effect, neither with `xswitchphase` (not in the KEBA guides) nor with the documented `x2src 4` and `x2 0|1` (they drive an *external* switch via contact X2), in a session or when idle. The SolarEdge app switches through the cloud back office. |
@@ -64,7 +65,8 @@ Entities marked ⚠️ may change or be removed once their behaviour is confirme
 
 **Charging current from a target power.** The integration sets the current in
 ampere. For a car that charges on three phases at about 230 V, the current for a
-target power is `P / (3 × 230 V)`. Clamp it to the supported range of 6–16 A:
+target power is `P / (3 × 230 V)`. Clamp it to the supported range, 6 A up to the
+hardware limit (the *Current Limit (Hardware)* sensor, 16 A in this example):
 
 ```yaml
 {{ [ [ (target_kw * 1000 / (3 * 230)) | round(0), 6 ] | max, 16 ] | min }}
@@ -101,6 +103,10 @@ card; it updates with every poll, so about every 10 s):
 - Home Assistant 2024.1 or newer
 - A charger that speaks the KEBA UDP protocol (for example the SolarEdge ONE EV Charger) reachable on the local network
 - UDP port **7090** accessible from the Home Assistant host
+- On a KEBA P30, DIP switch **DSW1.3 must be ON** ("Smart Home Interface is
+  enabled"); that is what makes the charger answer UDP. Modbus TCP is a separate
+  setting in the P30's web interface and is not needed
+  ([#5](https://github.com/mousehome-net/keba_one_ev/issues/5)).
 
 > **No additional Python packages required.** The integration uses only the Python standard library (`socket`, `json`).
 
@@ -148,7 +154,7 @@ After installation, add the integration via the UI:
 |-------|---------|-------------|
 | IP-Adresse | `xxx.xxx.xxx.xxx` | IP address of the charger |
 | UDP Port | `7090` | KEBA UDP port (do not change unless your network requires it) |
-| Abfrageintervall | `10` | Polling interval in seconds |
+| Abfrageintervall | `10` | Polling interval in seconds, at least 5 (KEBA requires 5 s between repetitions of the same command) |
 
 During setup a live connection test is performed — the integration sends `report 1` to the charger and verifies the response before saving.
 

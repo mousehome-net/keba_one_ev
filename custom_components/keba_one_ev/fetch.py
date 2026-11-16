@@ -53,3 +53,16 @@ def _send_with_retry(
             # coordinator update will fail if it's report 2 or 3 (issue #11).
             _LOGGER.warning("'%s' timed out twice in a row", command)
     return result
+
+
+def fetch_history(
+    send: Callable[[str], dict | None],
+    sleep: Callable[[float], None] = time.sleep,
+) -> dict | None:
+    """Fetch report 101, the last finished session.
+
+    Only called when a new session has started (see session.needs_history),
+    so it does not add a request to every poll.
+    """
+    sleep(REPORT_PAUSE_S)
+    return send("report 101")

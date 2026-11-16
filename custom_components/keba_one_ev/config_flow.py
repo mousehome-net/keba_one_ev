@@ -23,6 +23,7 @@ from .const import (
     DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
+    MIN_SCAN_INTERVAL,
     DOMAIN,
 )
 from .udp import send_command as _udp_send_command
@@ -85,7 +86,9 @@ class KebaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema({
             vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
             vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): int,
+            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
+                int, vol.Range(min=MIN_SCAN_INTERVAL)
+            ),
         })
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)

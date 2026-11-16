@@ -34,8 +34,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, DEFAULT_SCAN_INTERVAL
-from .fetch import fetch_all as _fetch_all
-from .session import session_duration_s as _session_duration_s
+from .fetch import fetch_all as _fetch_all, fetch_history as _fetch_history
+from .session import (
+    last_session_summary,
+    needs_history,
+    session_duration_s as _session_duration_s,
+)
 from .stale import StaleTolerance
 from .udp import send_command as _udp_send_command
 
@@ -59,6 +63,8 @@ class KebaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.host = host
         self.port = port
         self._stale = StaleTolerance()
+        self._history_for: int | None = None
+        self._last_session: dict | None = None
         super().__init__(
             hass,
             _LOGGER,
@@ -131,6 +137,15 @@ class KebaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(failure) from cause
         self._stale.on_success()
 
+        # The last finished session (report 101) only changes when report 100
+        # shows a new session, so it is not fetched on every poll.
+        session_id = r100.get("Session ID") if r100 else None
+        if needs_history(session_id, self._history_for):
+            r101 = await self.hass.async_add_executor_job(_fetch_history, self._send)
+            if r101 is not None:
+                self._last_session = last_session_summary(r101)
+                self._history_for = session_id
+
         # report 1 is best-effort: when it is missing keep what we knew before
         # instead of reporting "not connected" for a merely missed poll.
         previous = self.data or {}
@@ -191,7 +206,9 @@ class KebaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 r100.get("started[s]", 0) if r100 else 0,
                 r100.get("ended[s]", 0) if r100 else 0,
                 time.time(),
+                r100.get("Sec") if r100 else None,
             ),
+            "last_session":     self._last_session,
             "rfid_tag":         r100.get("RFID tag", "") if r100 else "",
             "rfid_class":       r100.get("RFID class", "") if r100 else "",
             "session_reason":   r100.get("reason", 0) if r100 else 0,  # stop reason code
