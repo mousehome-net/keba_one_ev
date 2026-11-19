@@ -136,6 +136,24 @@ missing gap did not cause dropped replies.
   `State`, `Plug`, `Enable sys`, `Max curr`, `E pres` to the address of the last
   command). This needs a vehicle to trigger changes.
 
+### 2026-11-16 to 2026-11-19, failsafe setting, mDNS and port scan (no vehicle)
+
+- `report 2` shows `Curr FS` 16000 and `Tmo FS` 119, unchanged over several
+  polls, so the failsafe function is configured (KEBA default: off). It was not set
+  by us. With `Curr FS` at the hardware limit it has no visible effect. `AuthON` is
+  0 and the `RFID tag` in `report 100` is all zeros, so the RFID commands `start` /
+  `stop` were not tried.
+- mDNS (unicast query to port 5353) announces one service:
+  `NexBlue SE_ONE_EVC basic-series._rest-SE_ONE_EVC-NexBlue-3p._tcp.local`, SRV
+  port 8883 on `SE_ONE_EVC.local`, TXT `serialnumber=99206288` (same as `Serial`
+  in `report 2`). This suggests NexBlue firmware, not KEBA; it is not confirmed by
+  SolarEdge.
+- A scan of all 65535 TCP ports from the charger's own subnet found every port
+  closed (the charger answers with a reset), including 8883 and 502. NexBlue
+  documents 8883 as an outbound cloud port (MQTT) and a local Modbus TCP interface
+  on 502 (`_nexblue_modbus._tcp`, with start/stop and phase registers) that has to
+  be enabled in the NexBlue app; it is not enabled here.
+
 ## Community results
 
 | Source | Unit | Result |
@@ -144,6 +162,13 @@ missing gap did not cause dropped replies.
 | [#10](https://github.com/mousehome-net/keba_one_ev/issues/10) | ONE_EV, FW 04.00.70 | `curr 10000` accepted, `Curr user` 10000. In a session `curr` between 6 and 16 A changed the current; `curr 0`, `ena`, `setenergy` and `xswitchphase` showed no visible effect, possibly masked by the car's own cloud control (retest announced). |
 | [#3](https://github.com/mousehome-net/keba_one_ev/issues/3) | unit with SolarEdge-style reports (`X2 phaseSwitch` field), no vehicle yet | `report 2`: `Curr HW` 32000 (hardware limit 32 A), `Curr user` 16000, `X2 phaseSwitch` 1. Confirms that `Curr HW` above 16000 exists. |
 | [#5](https://github.com/mousehome-net/keba_one_ev/issues/5) | `KC-P30-EC2404B2-E00-SL`, FW P30 v3.10.53, single-phase | Setup works (confirmed again on v1.8.0). Voltages read 0 V on all phases, also in `report 3` without a vehicle; whether the P30 only measures during a session is not confirmed. `report 1`, `2`, `3` and `100` answer; 30 of 30 back-to-back requests succeeded. `X2 phaseSwitch` is 0 (no phase switch). |
+
+From #12 (nfaa183): a SolarEdge-branded KEBA KC-P30 x-series, firmware 2.1.1,
+three-phase, with DIP switches and a web interface whose OCPP page points to
+`csms.solaredge.com`. Pointed at the HA [ocpp](https://github.com/lbbrhzn/ocpp)
+integration instead, start/stop and the current limit work over OCPP. So at least
+two different chargers are sold under the SolarEdge name; results from one may
+not apply to the other. `report 1` / `report 2` of that unit are not available yet.
 
 Further from #5 (vaci, KEBA P30 web interface): DSW1.3 ON is labelled "Smart
 Home Interface is enabled" and is needed for UDP; Modbus TCP has its own software

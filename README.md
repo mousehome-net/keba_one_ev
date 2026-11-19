@@ -317,6 +317,20 @@ accepted and the power followed it. Be aware of the trade-offs:
 
 This is only a pointer, it has not been tested by the maintainer.
 
+**A complete local setup on the KEBA variant.** nfaa183 documented a working
+setup (#12) on a charger that is a KEBA KC-P30 x-series (firmware 2.1.1) with a
+web interface: [solaredge-keba-local-ha](https://github.com/nfaa183/solaredge-keba-local-ha).
+This integration reads the values over UDP, the [ocpp](https://github.com/lbbrhzn/ocpp)
+integration takes over start/stop and the current limit, and evcc does PV-surplus
+charging. The central system address is changed in the charger's web interface,
+which the maintainer's `ONE_EV` unit does not have (no open TCP ports, and its
+back office is a `*.wevo.energy` host instead of `csms.solaredge.com`). Trade-offs
+named in that guide: no phase switching without the SolarEdge cloud (three-phase
+only, at least about 4.1 kW), no firmware updates from SolarEdge, and sessions
+that started before the charger connected to the local server cannot be stopped.
+If OCPP sets the current, leave this integration's *Charging Current* slider
+alone (or disable it), so that only one side sets a limit.
+
 ## Related Integrations
 
 This integration covers the EV charger only.
